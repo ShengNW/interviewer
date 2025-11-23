@@ -240,12 +240,31 @@ $(document).ready(async function() {
             let errorMsg = '连接失败，请重试';
             if (error.code === 4001) {
                 errorMsg = '您拒绝了连接请求';
+            } else if (error.message && error.message.includes('No wallet found')) {
+                errorMsg = '未找到钱包，请确保夜莺钱包已解锁';
+            } else if (error.message && error.message.includes('timeout')) {
+                errorMsg = '连接超时，请检查钱包是否正常运行';
             } else if (error.message) {
                 errorMsg = error.message;
             }
 
             showToast('error', errorMsg);
         }
+    });
+
+    // 绑定退出按钮
+    $('#logoutBtn').on('click', function() {
+        // 清除登录状态
+        currentAccount = null;
+        authToken = null;
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('wallet_address');
+
+        // 更新 UI
+        updateWalletUI(false);
+
+        console.log('已退出登录');
+        showToast('success', '已退出登录');
     });
 
     // 监听钱包事件
