@@ -1,6 +1,5 @@
 /**
- * Yeying 钱包集成 - 导航栏版本
- * 基于成功的 wallet_login.html 逻辑
+ * Yeying 钱包集成
  */
 
 // 全局变量
