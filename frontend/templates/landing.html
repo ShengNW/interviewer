@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}欢迎使用 Yeying面试官系统{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center" style="margin-top: 80px;">
+        <div class="col-lg-8 text-center">
+            <!-- 主标题 -->
+            <h1 class="display-4 mb-4">
+                <i class="fas fa-robot text-primary me-3"></i>
+                Yeying 面试官系统
+            </h1>
+            <p class="lead text-muted mb-5">
+                基于RAG技术的AI智能面试官，为您提供专业的技术面试体验
+            </p>
+
+            <!-- 功能特性 -->
+            <div class="row mt-5 mb-5">
+                <div class="col-md-4 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">智能问答</h5>
+                            <p class="card-text text-muted">
+                                AI自动生成针对性面试问题，覆盖技术各个领域
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-file-pdf fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">简历解析</h5>
+                            <p class="card-text text-muted">
+                                上传PDF简历，自动提取关键技能和项目经验
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                            <h5 class="card-title">面试报告</h5>
+                            <p class="card-text text-muted">
+                                生成专业的面试评价报告，全方位评估能力
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA按钮 -->
+            <div class="mt-5">
+                <button class="btn btn-primary btn-lg px-5" onclick="document.getElementById('connectWalletBtn').click()">
+                    <i class="fas fa-wallet me-2"></i>
+                    连接钱包开始使用
+                </button>
+                <p class="text-muted mt-3 small">
+                    支持 YeYing Wallet
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Reload page after successful wallet login
+$(document).on('wallet:login:success', function() {
+    window.location.reload();
+});
+</script>
+{% endblock %}

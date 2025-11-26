@@ -228,6 +228,9 @@ $(document).ready(async function() {
             updateWalletUI(true);
             showToast('success', '钱包连接成功！');
 
+            // 触发登录成功事件（用于landing页面监听）
+            $(document).trigger('wallet:login:success');
+
         } catch (error) {
             console.error('连接失败:', error);
 
@@ -252,18 +255,27 @@ $(document).ready(async function() {
     });
 
     // 绑定退出按钮
-    $('#logoutBtn').on('click', function() {
-        // 清除登录状态
+    $('#logoutBtn').on('click', async function() {
+        try {
+            // 调用后端退出接口清除Cookie
+            await fetch(`${API_BASE}/auth/logout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } catch (error) {
+            console.error('调用退出接口失败:', error);
+        }
+
+        // 清除本地登录状态
         currentAccount = null;
         authToken = null;
         localStorage.removeItem('auth_token');
         localStorage.removeItem('wallet_address');
 
-        // 更新 UI
-        updateWalletUI(false);
-
         console.log('已退出登录');
-        showToast('success', '已退出登录');
+
+        // 刷新页面回到landing页
+        window.location.href = '/';
     });
 
     // 监听钱包事件
@@ -271,20 +283,36 @@ $(document).ready(async function() {
         wallet.on('accountsChanged', (accounts) => {
             console.log('账户已切换:', accounts);
             if (accounts.length === 0) {
-                // 断开连接
+                // 断开连接 - 清除所有状态并刷新
                 currentAccount = null;
                 authToken = null;
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('wallet_address');
-                updateWalletUI(false);
+
+                // 调用后端清除Cookie
+                fetch(`${API_BASE}/auth/logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                }).catch(err => console.error('清除Cookie失败:', err));
+
+                // 刷新页面
+                window.location.href = '/';
             } else if (accounts[0] !== currentAccount) {
-                // 切换账户，需要重新登录
+                // 切换账户 - 需要重新登录
                 console.log('检测到账户切换，需要重新登录');
                 currentAccount = null;
                 authToken = null;
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('wallet_address');
-                updateWalletUI(false);
+
+                // 调用后端清除Cookie
+                fetch(`${API_BASE}/auth/logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                }).catch(err => console.error('清除Cookie失败:', err));
+
+                // 刷新页面
+                window.location.href = '/';
             }
         });
 

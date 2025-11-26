@@ -6,6 +6,7 @@
 from flask import Blueprint, Response
 from backend.services.interview_service import RoundService
 from backend.common.response import ApiResponse
+from backend.common.middleware import require_auth, require_resource_owner
 from backend.clients.minio_client import minio_client
 from backend.common.logger import get_logger
 
@@ -16,8 +17,10 @@ report_bp = Blueprint('report', __name__, url_prefix='/api')
 
 
 @report_bp.route('/generate_report/<session_id>/<int:round_index>', methods=['POST'])
+@require_auth
+@require_resource_owner('session')
 def generate_report(session_id, round_index):
-    """生成面试评价报告"""
+    """生成面试评价报告 - 需要登录且必须是session所属room的owner"""
     logger.debug(f"Generating report for session: {session_id}, round: {round_index}")
 
     try:
@@ -56,8 +59,10 @@ def generate_report(session_id, round_index):
 
 
 @report_bp.route('/reports/<session_id>/<int:round_index>')
+@require_auth
+@require_resource_owner('session')
 def get_report(session_id, round_index):
-    """获取指定会话轮次的报告"""
+    """获取指定会话轮次的报告 - 需要登录且必须是session所属room的owner"""
     logger.debug(f"Getting report for session: {session_id}, round: {round_index}")
 
     try:
@@ -83,8 +88,10 @@ def get_report(session_id, round_index):
 
 
 @report_bp.route('/reports/download/<session_id>/<int:round_index>')
+@require_auth
+@require_resource_owner('session')
 def download_report_pdf(session_id, round_index):
-    """下载PDF报告"""
+    """下载PDF报告 - 需要登录且必须是session所属room的owner"""
     logger.debug(f"Downloading report PDF for session: {session_id}, round: {round_index}")
 
     try:
@@ -108,8 +115,10 @@ def download_report_pdf(session_id, round_index):
 
 
 @report_bp.route('/reports/list/<session_id>')
+@require_auth
+@require_resource_owner('session')
 def list_session_reports(session_id):
-    """列出指定会话的所有报告"""
+    """列出指定会话的所有报告 - 需要登录且必须是session所属room的owner"""
     logger.debug(f"Listing reports for session: {session_id}")
 
     try:

@@ -8,6 +8,7 @@ import os
 from flask import Blueprint, request
 from werkzeug.utils import secure_filename
 from backend.common.response import ApiResponse
+from backend.common.middleware import require_auth, require_resource_owner
 from backend.clients.minio_client import download_resume_data, upload_resume_data
 from backend.common.logger import get_logger
 
@@ -18,8 +19,10 @@ resume_bp = Blueprint('resume', __name__)
 
 
 @resume_bp.route('/upload_resume/<room_id>', methods=['POST'])
+@require_auth
+@require_resource_owner('room')
 def upload_resume(room_id: str):
-    """上传简历PDF并解析为结构化数据，绑定到指定的room"""
+    """上传简历PDF并解析为结构化数据，绑定到指定的room - 需要登录且必须是room的owner"""
     logger.debug(f"Uploading resume for room: {room_id}")
 
     try:
@@ -87,8 +90,10 @@ def upload_resume(room_id: str):
 
 
 @resume_bp.route('/api/resume/<room_id>')
+@require_auth
+@require_resource_owner('room')
 def get_resume_by_room(room_id: str):
-    """获取指定room的简历数据"""
+    """获取指定room的简历数据 - 需要登录且必须是room的owner"""
     logger.debug(f"Getting resume for room: {room_id}")
 
     try:

@@ -23,7 +23,7 @@ import os
 import time
 import random
 import string
-from flask import request
+from flask import request, make_response
 from backend.common.response import ApiResponse
 from backend.common.middleware import handle_exceptions
 # 加载环境变量
@@ -114,13 +114,52 @@ def auth_verify(body):  # noqa: E501
         )
 
         logger.info(f"Login successful for {addr_key}")
-        return AuthVerifyResponse(body=AuthVerifyResponseBody(
+
+        # 创建响应对象
+        response_data = AuthVerifyResponse(body=AuthVerifyResponseBody(
             status=CommonResponseStatus(CommonResponseCodeEnum.OK),
             token=token
         ))
+
+        # 使用 make_response 创建 Flask Response 对象
+        response = make_response(response_data.to_dict())
+
+        # ⭐ 设置 Cookie (用于页面访问时的鉴权)
+        response.set_cookie(
+            'auth_token',
+            token,
+            httponly=True,      # 防止XSS攻击
+            secure=False,       # 生产环境改为True (仅HTTPS)
+            samesite='Lax',     # CSRF保护
+            max_age=3600        # 1小时过期
+        )
+
+        # 设置响应类型
+        response.headers['Content-Type'] = 'application/json'
+
+        return response
 
     except Exception as e:
         logger.error(f"Signature verification failed: {e}")
         raise Exception(
             f"authVerify failed: {str(e)}"
         )
+
+
+def auth_logout():
+    """退出登录 - 清除Cookie"""
+    logger.info("User logout")
+
+    # 创建响应
+    response = make_response({
+        "status": {
+            "code": "RESPONSE_CODE_OK",
+            "message": "退出成功"
+        }
+    })
+
+    # 清除Cookie
+    response.set_cookie('auth_token', '', expires=0)
+    response.headers['Content-Type'] = 'application/json'
+
+    return response

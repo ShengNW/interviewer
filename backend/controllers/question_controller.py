@@ -10,6 +10,7 @@ from backend.services.interview_service import SessionService
 from backend.clients.digitalhub_client import start_llm
 from backend.clients.minio_client import minio_client
 from backend.common.response import ApiResponse
+from backend.common.middleware import require_auth, require_resource_owner
 from backend.common.logger import get_logger
 from backend.models.models import Round, database
 
@@ -20,8 +21,10 @@ question_bp = Blueprint('question', __name__)
 
 
 @question_bp.route('/generate_questions/<session_id>', methods=['POST'])
+@require_auth
+@require_resource_owner('session')
 def generate_questions(session_id):
-    """生成面试题 + 启动 LLM Round Server"""
+    """生成面试题 + 启动 LLM Round Server - 需要登录且必须是session所属room的owner"""
     logger.debug(f"Generating questions for session: {session_id}")
 
     session = SessionService.get_session(session_id)
@@ -38,7 +41,6 @@ def generate_questions(session_id):
             return ApiResponse.error(result['error'])
 
         # 启动LLM
-        #_start_llm_server(session_id, result, result.get('round_index', 0))
         _start_llm_server(session_id, session.room.id, result, result.get('round_index', 0))
         return ApiResponse.success(data=result)
 
@@ -48,8 +50,10 @@ def generate_questions(session_id):
 
 
 @question_bp.route('/upload_jd/<room_id>', methods=['POST'])
+@require_auth
+@require_resource_owner('room')
 def upload_jd(room_id: str):
-    """为面试间上传自定义 JD"""
+    """为面试间上传自定义 JD - 需要登录且必须是room的owner"""
     logger.debug(f"Uploading JD for room: {room_id}")
 
     try:
@@ -91,8 +95,9 @@ def upload_jd(room_id: str):
 
 
 @question_bp.route('/get_current_question/<round_id>')
+@require_auth
 def get_current_question(round_id):
-    """获取当前问题"""
+    """获取当前问题 - 需要登录"""
     logger.debug(f"Getting current question for round: {round_id}")
 
     try:
@@ -111,8 +116,9 @@ def get_current_question(round_id):
 
 
 @question_bp.route('/save_answer', methods=['POST'])
+@require_auth
 def save_answer():
-    """保存用户回答"""
+    """保存用户回答 - 需要登录"""
     logger.debug("Saving answer")
 
     try:
@@ -135,8 +141,10 @@ def save_answer():
 
 
 @question_bp.route('/get_qa_analysis/<session_id>/<int:round_index>')
+@require_auth
+@require_resource_owner('session')
 def get_qa_analysis(session_id, round_index):
-    """获取指定轮次的QA分析数据"""
+    """获取指定轮次的QA分析数据 - 需要登录且必须是session所属room的owner"""
     logger.debug(f"Getting QA analysis for session: {session_id}, round: {round_index}")
 
     try:
@@ -159,8 +167,10 @@ def get_qa_analysis(session_id, round_index):
 
 
 @question_bp.route('/qa_completion/<session_id>/<int:round_index>', methods=['POST'])
+@require_auth
+@require_resource_owner('session')
 def confirm_qa_completion(session_id, round_index):
-    """确认指定轮次的QA数据已生成"""
+    """确认指定轮次的QA数据已生成 - 需要登录且必须是session所属room的owner"""
     logger.debug(
         "Confirming QA completion for session %s round %s", session_id, round_index
     )
