@@ -43,6 +43,7 @@ class Room(BaseModel):
     memory_id = CharField(unique=True)
     name = CharField(default="面试间")
     jd_id = CharField(null=True)  # 上传的 JD ID（可选）
+    owner_address = CharField(max_length=64, null=True)  # 钱包地址
 
     class Meta:
         table_name = 'rooms'

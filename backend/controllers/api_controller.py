@@ -17,6 +17,7 @@ from backend.services.interview_service import (
 )
 from backend.common.response import ApiResponse, ResponseCode
 from backend.common.validators import validate_uuid_param
+from backend.common.middleware import require_auth, require_resource_owner
 from backend.clients.minio_client import minio_client, download_resume_data
 from backend.common.logger import get_logger
 
@@ -61,10 +62,12 @@ def verify_signature(req) -> bool:
 # ==================== Room API ====================
 
 @api_bp.route('/rooms', methods=['GET'])
+@require_auth
 def get_rooms() -> Tuple[dict, int]:
-    """获取所有面试间"""
+    """获取当前用户的所有面试间 - 需要登录"""
     try:
-        rooms = RoomService.get_all_rooms()
+        current_user = request.current_user
+        rooms = RoomService.get_rooms_by_owner(current_user)
         return ApiResponse.success(data=[RoomService.to_dict(r) for r in rooms])
     except Exception as e:
         logger.error(f"Failed to get rooms: {e}", exc_info=True)
@@ -73,8 +76,10 @@ def get_rooms() -> Tuple[dict, int]:
 
 @api_bp.route('/rooms/<room_id>', methods=['DELETE'])
 @validate_uuid_param('room_id')
+@require_auth
+@require_resource_owner('room')
 def delete_room(room_id: str) -> Tuple[dict, int]:
-    """删除面试间"""
+    """删除面试间 - 需要登录且必须是owner"""
     try:
         success = RoomService.delete_room(room_id)
         if success:
@@ -89,8 +94,10 @@ def delete_room(room_id: str) -> Tuple[dict, int]:
 
 @api_bp.route('/sessions/<room_id>', methods=['GET'])
 @validate_uuid_param('room_id')
+@require_auth
+@require_resource_owner('room')
 def get_sessions(room_id: str) -> Tuple[dict, int]:
-    """获取指定面试间的所有会话"""
+    """获取指定面试间的所有会话 - 需要登录且必须是room的owner"""
     try:
         sessions = SessionService.get_sessions_by_room(room_id)
         return ApiResponse.success(data=[SessionService.to_dict(s) for s in sessions])
@@ -101,8 +108,10 @@ def get_sessions(room_id: str) -> Tuple[dict, int]:
 
 @api_bp.route('/sessions/<session_id>', methods=['DELETE'])
 @validate_uuid_param('session_id')
+@require_auth
+@require_resource_owner('session')
 def delete_session(session_id: str) -> Tuple[dict, int]:
-    """删除面试会话"""
+    """删除面试会话 - 需要登录且必须是session所属room的owner"""
     try:
         success = SessionService.delete_session(session_id)
         if success:
@@ -117,8 +126,10 @@ def delete_session(session_id: str) -> Tuple[dict, int]:
 
 @api_bp.route('/rounds/<session_id>', methods=['GET'])
 @validate_uuid_param('session_id')
+@require_auth
+@require_resource_owner('session')
 def get_rounds(session_id: str) -> Tuple[dict, int]:
-    """获取指定会话的所有轮次"""
+    """获取指定会话的所有轮次 - 需要登录且必须是session所属room的owner"""
     try:
         rounds = RoundService.get_rounds_by_session(session_id)
         return ApiResponse.success(data=[RoundService.to_dict(r) for r in rounds])

@@ -9,6 +9,7 @@ from flask import Blueprint, render_template, redirect, url_for
 from backend.services.interview_service import SessionService, RoundService
 from backend.clients.digitalhub_client import boot_dh
 from backend.clients.minio_client import download_resume_data, minio_client
+from backend.common.middleware import require_auth, require_resource_owner
 from backend.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -21,8 +22,10 @@ PLACEHOLDER_HOSTS = {"your_public_host_here", "your-public-host"}
 
 
 @session_bp.route('/create_session/<room_id>')
+@require_auth
+@require_resource_owner('room')
 def create_session(room_id):
-    """在指定面试间创建新的面试会话"""
+    """在指定面试间创建新的面试会话 - 需要登录且必须是room的owner"""
     # 检查简历是否已上传
     resume_data = download_resume_data(room_id)
     if not resume_data:
@@ -49,8 +52,10 @@ def create_session(room_id):
 
 
 @session_bp.route('/session/<session_id>')
+@require_auth
+@require_resource_owner('session')
 def session_detail(session_id):
-    """面试会话详情页面"""
+    """面试会话详情页面 - 需要登录且必须是session所属room的owner"""
     session = SessionService.get_session(session_id)
     if not session:
         logger.warning(f"Session not found: {session_id}")

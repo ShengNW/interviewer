@@ -223,13 +223,18 @@ function setLoading(element, isLoading) {
 // API调用封装
 class ApiClient {
     static async request(url, options = {}) {
+        // 获取token
+        const token = localStorage.getItem('auth_token');
+
         const config = {
             headers: {
                 'Content-Type': 'application/json',
+                // 如果有token，自动添加到Header
+                ...(token && { 'Authorization': `Bearer ${token}` })
             },
             ...options
         };
-        
+
         try {
             const response = await fetch(url, config);
             

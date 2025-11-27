@@ -63,6 +63,16 @@ paths:
       tags:
       - Auth
       x-openapi-router-controller: backend.controllers.auth_controller
+  /api/v1/auth/logout:
+    post:
+      operationId: auth_logout
+      responses:
+        "200":
+          description: A successful response.
+      summary: 退出登录
+      tags:
+      - Auth
+      x-openapi-router-controller: backend.controllers.auth_controller
 components:
   schemas:
     authChallengeRequest:

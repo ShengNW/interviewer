@@ -14,9 +14,9 @@ logger = get_logger(__name__)
 
 class RoomService:
     """房间管理服务"""
-    
+
     @staticmethod
-    def create_room(name: Optional[str] = None) -> Room:
+    def create_room(name: Optional[str] = None, owner_address: Optional[str] = None) -> Room:
         """创建新的面试间"""
         from backend.clients.rag.rag_client import get_rag_client
 
@@ -32,14 +32,16 @@ class RoomService:
             logger.error(f"Failed to create RAG memory: {e}")
             # 如果 RAG 服务不可用，使用本地生成的 memory_id
             memory_id = f"memory_{room_id[:8]}"
-        
+
         room = Room.create(
             id=room_id,
             memory_id=memory_id,
-            name=room_name
+            name=room_name,
+            owner_address=owner_address
         )
+        logger.info(f"Created room {room_id} for owner {owner_address}")
         return room
-    
+
     @staticmethod
     def get_room(room_id: str) -> Optional[Room]:
         """获取面试间"""
@@ -47,12 +49,19 @@ class RoomService:
             return Room.get_by_id(room_id)
         except Room.DoesNotExist:
             return None
-    
+
     @staticmethod
     def get_all_rooms() -> List[Room]:
         """获取所有面试间"""
         return list(Room.select().order_by(Room.created_at.desc()))
-    
+
+    @staticmethod
+    def get_rooms_by_owner(owner_address: str) -> List[Room]:
+        """获取指定用户的所有面试间"""
+        return list(Room.select().where(
+            Room.owner_address == owner_address
+        ).order_by(Room.created_at.desc()))
+
     @staticmethod
     def delete_room(room_id: str) -> bool:
         """删除面试间"""
@@ -65,21 +74,22 @@ class RoomService:
             return True
         except Room.DoesNotExist:
             return False
-    
+
     @staticmethod
     def to_dict(room: Room) -> Dict[str, Any]:
         """将Room对象转换为字典"""
         sessions = SessionService.get_sessions_by_room(room.id)
         total_rounds = 0
-        
+
         for session in sessions:
             rounds = RoundService.get_rounds_by_session(session.id)
             total_rounds += len(rounds)
-        
+
         return {
             'id': room.id,
             'memory_id': room.memory_id,
             'name': room.name,
+            'owner_address': room.owner_address,
             'created_at': room.created_at.isoformat(),
             'updated_at': room.updated_at.isoformat(),
             'sessions_count': len(sessions),
