@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}价格 - 夜莺面试官{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center" style="margin-top: 60px;">
+        <div class="col-lg-10">
+            <!-- 页面标题 -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold mb-3">选择适合您的方案</h1>
+                <p class="lead text-muted">灵活的定价方案，满足不同需求</p>
+            </div>
+
+            <!-- 价格卡片 -->
+            <div class="row g-4">
+                <!-- 免费版 -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <h3 class="card-title mb-3">免费版</h3>
+                            <div class="mb-4">
+                                <h2 class="display-4 fw-bold">¥0</h2>
+                                <p class="text-muted">永久免费</p>
+                            </div>
+                            <ul class="list-unstyled text-start mb-4">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>每月 10 次面试会话</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>基础题目生成</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>简历解析（5次/月）</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>标准面试报告</li>
+                                <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>高级AI分析</li>
+                                <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>数字人面试官</li>
+                            </ul>
+                            <button class="btn btn-outline-primary w-100" onclick="document.getElementById('connectWalletBtn').click()">
+                                开始使用
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 专业版 -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-lg border-primary" style="transform: scale(1.05);">
+                        <div class="card-header bg-primary text-white text-center py-3">
+                            <span class="badge bg-warning text-dark">推荐</span>
+                        </div>
+                        <div class="card-body text-center p-4">
+                            <h3 class="card-title mb-3">专业版</h3>
+                            <div class="mb-4">
+                                <h2 class="display-4 fw-bold">¥99</h2>
+                                <p class="text-muted">每月</p>
+                            </div>
+                            <ul class="list-unstyled text-start mb-4">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>无限面试会话</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>高级题目生成</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>无限简历解析</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>详细面试报告</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>高级AI分析</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>优先技术支持</li>
+                            </ul>
+                            <button class="btn btn-primary w-100" disabled>
+                                即将推出
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 企业版 -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <h3 class="card-title mb-3">企业版</h3>
+                            <div class="mb-4">
+                                <h2 class="display-4 fw-bold">定制</h2>
+                                <p class="text-muted">按需定价</p>
+                            </div>
+                            <ul class="list-unstyled text-start mb-4">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>专业版所有功能</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>数字人面试官</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>私有化部署</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>定制化需求</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>专属客户经理</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>SLA 保障</li>
+                            </ul>
+                            <button class="btn btn-outline-primary w-100" disabled>
+                                联系我们
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="mt-5 pt-5">
+                <h3 class="text-center mb-4">常见问题</h3>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-question-circle text-primary me-2"></i>如何升级到专业版？</h5>
+                                <p class="card-text text-muted">专业版即将推出，敬请期待。届时您可以在账户设置中一键升级。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-question-circle text-primary me-2"></i>支持哪些支付方式？</h5>
+                                <p class="card-text text-muted">目前支持加密货币支付，后续将支持支付宝、微信支付等主流支付方式。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -107,3 +107,21 @@ def _ping_digital_human() -> None:
         ping_dh()
     except Exception as e:
         logger.warning(f"Failed to ping digital human: {e}")
+
+
+@room_bp.route('/pricing')
+def pricing():
+    """价格页面"""
+    return render_template('pricing.html')
+
+
+@room_bp.route('/docs')
+def docs():
+    """文档页面"""
+    return render_template('docs.html')
+
+
+@room_bp.route('/about')
+def about():
+    """关于我们页面"""
+    return render_template('about.html')

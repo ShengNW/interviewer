@@ -1,19 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}欢迎使用 Yeying面试官系统{% endblock %}
+{% block title %}欢迎使用夜莺面试官{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="row justify-content-center" style="margin-top: 80px;">
         <div class="col-lg-8 text-center">
             <!-- 主标题 -->
-            <h1 class="display-4 mb-4">
-                <i class="fas fa-robot text-primary me-3"></i>
-                Yeying 面试官系统
+            <h1 class="display-3 mb-4 fw-bold" style="font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; letter-spacing: 2px;">
+                <img src="{{ url_for('static', filename='images/yeying-logo.png') }}"
+                     alt="夜莺" style="height: 70px; margin-right: 20px; vertical-align: middle;">
+                <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">夜莺面试官</span>
             </h1>
-            <p class="lead text-muted mb-5">
-                基于RAG技术的AI智能面试官，为您提供专业的技术面试体验
-            </p>
 
             <!-- 功能特性 -->
             <div class="row mt-5 mb-5">
@@ -33,7 +31,7 @@
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body text-center p-4">
                             <i class="fas fa-file-pdf fa-3x text-success mb-3"></i>
-                            <h5 class="card-title">简历解析</h5>
+                            <h5 class="card-title">简历优化</h5>
                             <p class="card-text text-muted">
                                 上传PDF简历，自动提取关键技能和项目经验
                             </p>
@@ -60,14 +58,13 @@
                     <i class="fas fa-wallet me-2"></i>
                     连接钱包开始使用
                 </button>
-                <p class="text-muted mt-3 small">
-                    支持 YeYing Wallet
-                </p>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
 // Reload page after successful wallet login
 $(document).on('wallet:login:success', function() {

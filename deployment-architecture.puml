@@ -1,4 +1,4 @@
-@startuml Yeying面试官系统 - 部署架构图
+@startuml Yeying面试官 - 部署架构图
 
 !define RECTANGLE class
 

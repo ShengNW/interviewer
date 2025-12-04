@@ -242,6 +242,8 @@ $(document).ready(async function() {
             let errorMsg = '连接失败，请重试';
             if (error.code === 4001) {
                 errorMsg = '您拒绝了连接请求';
+            } else if (error.message && error.message.includes('Session expired')) {
+                errorMsg = '钱包会话已过期，请重新解锁钱包后再试';
             } else if (error.message && error.message.includes('No wallet found')) {
                 errorMsg = '未找到钱包，请确保夜莺钱包已解锁';
             } else if (error.message && error.message.includes('timeout')) {

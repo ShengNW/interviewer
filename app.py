@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Yeying面试官系统 - Flask应用主入口
+夜莺面试官 - Flask应用主入口
 
 采用企业级架构，模块化设计
 """
