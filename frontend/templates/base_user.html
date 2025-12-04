@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}夜莺面试官{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+
+    <!-- Bootstrap CSS -->
+    <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- 已登录导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light" style="background: transparent; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+        <div class="container-fluid px-4">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto ms-lg-4">
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('room.index') }}" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
+                            <i class="fas fa-chart-line me-2"></i>概览
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('room.resumes_list') }}" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
+                            <i class="fas fa-file-alt me-2"></i>我的简历
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('room.rooms_list') }}" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
+                            <i class="fas fa-door-open me-2"></i>我的面试间
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('room.mistakes_list') }}" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
+                            <i class="fas fa-bookmark me-2"></i>我的错题集
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav">
+                    <!-- 钱包信息 -->
+                    <li class="nav-item">
+                        <div class="d-flex align-items-center" id="walletInfo">
+                            <span class="navbar-text me-3" style="padding: 0.5rem 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <span id="walletAddress"></span>
+                            </span>
+                            <button class="btn btn-outline-secondary btn-sm" id="logoutBtn" style="border-radius: 10px; padding: 0.5rem 1rem;">
+                                <i class="fas fa-sign-out-alt me-1"></i>退出
+                            </button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="container-fluid mt-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 现代化页脚 -->
+    <footer style="background: transparent; backdrop-filter: blur(10px); padding: 2rem 0; margin-top: 5rem;">
+        <div class="container text-center">
+            <p class="mb-0" style="color: #4a5568; font-size: 0.95rem;">
+                夜莺面试官 - 让AI助力技术面试
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+    <!-- 自定义脚本 -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- 钱包集成 -->
+    <script src="{{ url_for('static', filename='js/wallet.js') }}"></script>
+
+    <!-- 初始化钱包地址显示 -->
+    <script>
+    $(document).ready(function() {
+        // 显示钱包地址
+        const savedAddress = localStorage.getItem('wallet_address');
+        if (savedAddress) {
+            const formatAddress = (addr) => {
+                if (!addr) return '';
+                return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+            };
+            $('#walletAddress').text(formatAddress(savedAddress));
+        }
+    });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

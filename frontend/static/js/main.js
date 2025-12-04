@@ -341,16 +341,13 @@ async function deleteRoom(roomId) {
         if (result.success) {
             showToast('success', '面试间删除成功');
 
-            // 如果在面试间详情页，跳转到首页
+            // 立即跳转，不延迟（避免在延迟期间页面刷新导致"面试间不存在"错误）
+            // 如果在面试间详情页，跳转到我的面试间列表页
             if (window.location.pathname.includes('/room/')) {
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 1000);
+                window.location.href = '/rooms';
             } else {
-                // 如果在首页，刷新页面
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+                // 如果在首页或面试间列表页，刷新页面
+                window.location.reload();
             }
         } else {
             showToast('error', result.error || '删除面试间失败');

@@ -1,64 +1,273 @@
-{% extends "base.html" %}
+{% extends "base_guest.html" %}
 
 {% block title %}欢迎使用夜莺面试官{% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="row justify-content-center" style="margin-top: 80px;">
-        <div class="col-lg-8 text-center">
-            <!-- 主标题 -->
-            <h1 class="display-3 mb-4 fw-bold" style="font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; letter-spacing: 2px;">
-                <img src="{{ url_for('static', filename='images/yeying-logo.png') }}"
-                     alt="夜莺" style="height: 70px; margin-right: 20px; vertical-align: middle;">
-                <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">夜莺面试官</span>
-            </h1>
+    <!-- Hero Section -->
+    <section id="home" style="margin-top: 60px; margin-bottom: 20px;">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <div style="animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
+                    <div class="mb-4">
+                        <img src="{{ url_for('static', filename='images/yeying-logo.png') }}"
+                             alt="夜莺" style="height: 90px; margin-bottom: 30px; filter: drop-shadow(0 0 30px rgba(102, 126, 234, 0.5));">
+                    </div>
 
-            <!-- 功能特性 -->
-            <div class="row mt-5 mb-5">
-                <div class="col-md-4 mb-4">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body text-center p-4">
-                            <i class="fas fa-brain fa-3x text-primary mb-3"></i>
-                            <h5 class="card-title">智能问答</h5>
-                            <p class="card-text text-muted">
-                                AI自动生成针对性面试问题，覆盖技术各个领域
+                    <h1 class="display-2 mb-4 fw-bold" style="letter-spacing: -0.02em;">
+                        <span class="gradient-text">夜莺面试官</span>
+                    </h1>
+
+                    <p class="lead mb-5" style="font-size: 1.35rem; color: var(--text-secondary); max-width: 700px; margin-left: auto; margin-right: auto; line-height: 1.8;">
+                        让每一次面试准备都更加高效专业
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心优势 -->
+    <section id="features" style="padding: 10px 0; margin-bottom: 80px;">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center" style="padding: 2.5rem 2rem; border: none; background: rgba(102, 126, 234, 0.03); transition: all 0.3s ease;">
+                            <div class="mb-3">
+                                <div style="width: 80px; height: 80px; margin: 0 auto; background: rgba(102, 126, 234, 0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-brain" style="font-size: 2.5rem; color: var(--accent-blue);"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold mb-3">RAG技术加持</h5>
+                            <p class="text-muted" style="line-height: 1.8;">
+                                采用检索增强生成技术，基于简历内容生成精准的个性化面试题
                             </p>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-md-4 mb-4">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body text-center p-4">
-                            <i class="fas fa-file-pdf fa-3x text-success mb-3"></i>
-                            <h5 class="card-title">简历优化</h5>
-                            <p class="card-text text-muted">
-                                上传PDF简历，自动提取关键技能和项目经验
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center" style="padding: 2.5rem 2rem; border: none; background: rgba(16, 185, 129, 0.03); transition: all 0.3s ease;">
+                            <div class="mb-3">
+                                <div style="width: 80px; height: 80px; margin: 0 auto; background: rgba(16, 185, 129, 0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-edit" style="font-size: 2.5rem; color: var(--accent-green);"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold mb-3">简历优化建议</h5>
+                            <p class="text-muted" style="line-height: 1.8;">
+                                AI深度分析简历内容，提供针对性优化建议，提升简历竞争力
                             </p>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-md-4 mb-4">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body text-center p-4">
-                            <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
-                            <h5 class="card-title">面试报告</h5>
-                            <p class="card-text text-muted">
-                                生成专业的面试评价报告，全方位评估能力
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center" style="padding: 2.5rem 2rem; border: none; background: rgba(79, 172, 254, 0.03); transition: all 0.3s ease;">
+                            <div class="mb-3">
+                                <div style="width: 80px; height: 80px; margin: 0 auto; background: rgba(79, 172, 254, 0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-bookmark" style="font-size: 2.5rem; color: #4facfe;"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold mb-3">错题收藏本</h5>
+                            <p class="text-muted" style="line-height: 1.8;">
+                                收藏重要题目和易错题，随时复习回顾，针对性巩固薄弱知识点
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <!-- CTA按钮 -->
-            <div class="mt-5">
-                <button class="btn btn-primary btn-lg px-5" onclick="document.getElementById('connectWalletBtn').click()">
-                    <i class="fas fa-wallet me-2"></i>
-                    连接钱包开始使用
-                </button>
+    <!-- 价格方案 -->
+    <section id="pricing" class="py-5" style="margin-top: 100px;">
+        <div class="row justify-content-center">
+            <div class="col-lg-11">
+                <div class="text-center mb-4">
+                    <h2 class="display-4 fw-bold mb-3">
+                        <span class="gradient-text">选择适合您的方案</span>
+                    </h2>
+                    <p class="lead text-muted" style="font-size: 1.25rem;">灵活的定价方案，满足不同需求</p>
+                </div>
+
+                <!-- 价格卡片 -->
+                <div class="row g-4 mb-4">
+                    <!-- 免费版 -->
+                    <div class="col-lg-4">
+                        <div class="card h-100" style="padding: 2.5rem 2rem; position: relative;">
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-3" style="font-size: 1.75rem;">免费版</h3>
+                                <div class="mb-4">
+                                    <div style="display: inline-block; position: relative;">
+                                        <span style="font-size: 3.5rem; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">¥0</span>
+                                        <span class="text-muted" style="font-size: 1rem; position: absolute; bottom: 8px; margin-left: 8px;">/ 永久</span>
+                                    </div>
+                                </div>
+                                <ul class="list-unstyled text-start mb-4" style="padding-left: 1rem;">
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-green); font-size: 1.2rem;"></i>
+                                        <span>每月 <strong>10 次</strong>面试会话</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-green); font-size: 1.2rem;"></i>
+                                        <span>基础题目生成</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-green); font-size: 1.2rem;"></i>
+                                        <span>简历解析（5次/月）</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-green); font-size: 1.2rem;"></i>
+                                        <span>标准面试报告</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start opacity-50">
+                                        <i class="fas fa-times-circle me-3 mt-1" style="color: var(--text-muted); font-size: 1.2rem;"></i>
+                                        <span>高级AI分析</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start opacity-50">
+                                        <i class="fas fa-times-circle me-3 mt-1" style="color: var(--text-muted); font-size: 1.2rem;"></i>
+                                        <span>数字人面试官</span>
+                                    </li>
+                                </ul>
+                                <button class="btn btn-outline-light w-100" onclick="document.getElementById('connectWalletBtn').click()" style="padding: 0.875rem; font-weight: 600; border-width: 2px;">
+                                    开始使用
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 专业版 -->
+                    <div class="col-lg-4">
+                        <div class="card h-100" style="padding: 2.5rem 2rem; position: relative; border: 2px solid; border-image: var(--gradient-primary) 1; transform: scale(1.05); z-index: 2;">
+                            <!-- 推荐标签 -->
+                            <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--gradient-primary); padding: 0.5rem 1.5rem; border-radius: 20px; font-weight: 700; font-size: 0.875rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                                推荐
+                            </div>
+
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-3" style="font-size: 1.75rem;">专业版</h3>
+                                <div class="mb-4">
+                                    <div style="display: inline-block; position: relative;">
+                                        <span style="font-size: 3.5rem; font-weight: 800; background: var(--gradient-secondary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">¥99</span>
+                                        <span class="text-muted" style="font-size: 1rem; position: absolute; bottom: 8px; margin-left: 8px;">/ 月</span>
+                                    </div>
+                                </div>
+                                <ul class="list-unstyled text-start mb-4" style="padding-left: 1rem;">
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-blue); font-size: 1.2rem;"></i>
+                                        <span><strong>无限</strong>面试会话</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-blue); font-size: 1.2rem;"></i>
+                                        <span>高级题目生成</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-blue); font-size: 1.2rem;"></i>
+                                        <span><strong>无限</strong>简历解析</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-blue); font-size: 1.2rem;"></i>
+                                        <span>详细面试报告</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-blue); font-size: 1.2rem;"></i>
+                                        <span>高级AI分析</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-blue); font-size: 1.2rem;"></i>
+                                        <span>优先技术支持</span>
+                                    </li>
+                                </ul>
+                                <button class="btn btn-primary w-100" disabled style="padding: 0.875rem; font-weight: 600;">
+                                    即将推出
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 企业版 -->
+                    <div class="col-lg-4">
+                        <div class="card h-100" style="padding: 2.5rem 2rem; position: relative;">
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-3" style="font-size: 1.75rem;">企业版</h3>
+                                <div class="mb-4">
+                                    <div style="display: inline-block; position: relative;">
+                                        <span style="font-size: 3.5rem; font-weight: 800; background: var(--gradient-tech); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">定制</span>
+                                    </div>
+                                    <p class="text-muted mt-2" style="font-size: 1rem;">按需定价</p>
+                                </div>
+                                <ul class="list-unstyled text-start mb-4" style="padding-left: 1rem;">
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-purple); font-size: 1.2rem;"></i>
+                                        <span>专业版所有功能</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-purple); font-size: 1.2rem;"></i>
+                                        <span>数字人面试官</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-purple); font-size: 1.2rem;"></i>
+                                        <span>私有化部署</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-purple); font-size: 1.2rem;"></i>
+                                        <span>定制化需求</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-purple); font-size: 1.2rem;"></i>
+                                        <span>专属客户经理</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="fas fa-check-circle me-3 mt-1" style="color: var(--accent-purple); font-size: 1.2rem;"></i>
+                                        <span>SLA 保障</span>
+                                    </li>
+                                </ul>
+                                <button class="btn btn-outline-light w-100" disabled style="padding: 0.875rem; font-weight: 600; border-width: 2px;">
+                                    联系我们
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
+    </section>
+
+    <!-- 联系我们 -->
+    <section id="contact" class="py-5" style="margin-top: 150px; margin-bottom: 80px;">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        <h2 class="mb-4 fw-bold">
+                            <i class="fas fa-envelope me-2" style="color: var(--accent-blue);"></i>
+                            <span class="gradient-text">联系我们</span>
+                        </h2>
+                        <p class="text-muted mb-4" style="font-size: 1.1rem;">
+                            如有任何问题或建议，欢迎随时联系我们
+                        </p>
+                        <div class="row justify-content-center">
+                            <div class="col-md-4 mb-4">
+                                <div style="width: 60px; height: 60px; margin: 0 auto 1rem; background: rgba(102, 126, 234, 0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-envelope" style="font-size: 1.8rem; color: var(--accent-blue);"></i>
+                                </div>
+                                <p class="mb-1 fw-bold">邮箱</p>
+                                <p class="text-muted">support@yeying.ai</p>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div style="width: 60px; height: 60px; margin: 0 auto 1rem; background: rgba(0, 0, 0, 0.05); border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fab fa-github" style="font-size: 1.8rem; color: #333;"></i>
+                                </div>
+                                <p class="mb-1 fw-bold">GitHub</p>
+                                <p class="text-muted">github.com/yeying-ai</p>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div style="width: 60px; height: 60px; margin: 0 auto 1rem; background: rgba(79, 172, 254, 0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fab fa-twitter" style="font-size: 1.8rem; color: #4facfe;"></i>
+                                </div>
+                                <p class="mb-1 fw-bold">Twitter</p>
+                                <p class="text-muted">@yeying_ai</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 </div>

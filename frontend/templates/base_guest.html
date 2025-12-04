@@ -14,11 +14,11 @@
     <link href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
     <!-- 自定义样式 -->
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
-    
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- 现代化导航栏 -->
+    <!-- 未登录导航栏 -->
     <nav class="navbar navbar-expand-lg navbar-light" style="background: transparent; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
         <div class="container-fluid px-4">
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -26,8 +26,7 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <!-- 未登录导航 -->
-                <ul class="navbar-nav me-auto ms-lg-4" id="guestNav">
+                <ul class="navbar-nav me-auto ms-lg-4">
                     <li class="nav-item">
                         <a class="nav-link px-3" href="{{ url_for('room.index') }}" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
                             <i class="fas fa-home me-2"></i>首页
@@ -45,45 +44,12 @@
                     </li>
                 </ul>
 
-                <!-- 已登录导航 -->
-                <ul class="navbar-nav me-auto ms-lg-4 d-none" id="userNav">
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ url_for('room.index') }}" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
-                            <i class="fas fa-chart-line me-2"></i>概览
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="#" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
-                            <i class="fas fa-file-alt me-2"></i>我的简历
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ url_for('room.index') }}" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
-                            <i class="fas fa-door-open me-2"></i>我的面试间
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="#" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
-                            <i class="fas fa-bookmark me-2"></i>我的错题集
-                        </a>
-                    </li>
-                </ul>
-
                 <ul class="navbar-nav">
                     <!-- 钱包连接按钮 -->
-                    <li class="nav-item" id="walletSection">
+                    <li class="nav-item">
                         <button class="btn btn-primary btn-sm" id="connectWalletBtn" style="border-radius: 10px; padding: 0.5rem 1.25rem; font-weight: 600;">
                             <i class="fas fa-wallet me-2"></i>连接钱包
                         </button>
-                        <div class="d-none align-items-center" id="walletInfo">
-                            <span class="navbar-text me-3" style="padding: 0.5rem 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
-                                <i class="fas fa-check-circle me-2"></i>
-                                <span id="walletAddress"></span>
-                            </span>
-                            <button class="btn btn-outline-secondary btn-sm" id="logoutBtn" style="border-radius: 10px; padding: 0.5rem 1rem;">
-                                <i class="fas fa-sign-out-alt me-1"></i>退出
-                            </button>
-                        </div>
                     </li>
                 </ul>
             </div>
@@ -113,32 +79,9 @@
     <!-- 钱包集成 -->
     <script src="{{ url_for('static', filename='js/wallet.js') }}"></script>
 
-    <!-- 导航栏权限拦截 -->
+    <!-- 平滑滚动 -->
     <script>
     $(document).ready(function() {
-        // 拦截需要登录的导航链接
-        $('.nav-link-protected').on('click', function(e) {
-            const token = localStorage.getItem('auth_token');
-
-            // 如果未登录，阻止跳转并提示
-            if (!token) {
-                e.preventDefault();
-
-                // 显示提示
-                if (window.YeyingInterviewer && window.YeyingInterviewer.showToast) {
-                    window.YeyingInterviewer.showToast('warning', '请先连接钱包登录');
-                } else {
-                    alert('请先连接钱包登录');
-                }
-
-                // 触发连接钱包按钮点击
-                $('#connectWalletBtn').addClass('btn-pulse');
-                setTimeout(function() {
-                    $('#connectWalletBtn').removeClass('btn-pulse');
-                }, 2000);
-            }
-        });
-
         // 平滑滚动到锚点
         document.querySelectorAll('a[href*="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -168,17 +111,6 @@
         });
     });
     </script>
-
-    <style>
-    /* 按钮脉冲动画提示 */
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(13, 110, 253, 0.6); }
-    }
-    .btn-pulse {
-        animation: pulse 0.5s ease-in-out 3;
-    }
-    </style>
 
     {% block extra_js %}{% endblock %}
 </body>
