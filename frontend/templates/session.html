@@ -304,8 +304,8 @@
 {% block extra_js %}
 <script>
 // 由后端注入：数字人启动提示与链接（可能为 null）
-const DH_BOOT_MESSAGE = {{ dh_message|tojson|safe if dh_message else 'null' }};
-const DH_CONNECT_URL = {{ dh_connect_url|tojson|safe if dh_connect_url else 'null' }};
+const DH_BOOT_MESSAGE = {{ dh_message|tojson if dh_message else 'null' }};
+const DH_CONNECT_URL = {{ dh_connect_url|tojson if dh_connect_url else 'null' }};
 
 // 全局会话ID、房间ID和当前轮次状态
 const SESSION_ID = '{{ session.id }}';

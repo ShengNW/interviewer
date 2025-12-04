@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}文档 - 夜莺面试官{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-top: 40px;">
+        <!-- 侧边栏 -->
+        <div class="col-lg-3">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">快速导航</h5>
+                    <nav class="nav flex-column">
+                        <a class="nav-link" href="#getting-started">快速开始</a>
+                        <a class="nav-link" href="#features">功能介绍</a>
+                        <a class="nav-link" href="#workflow">使用流程</a>
+                        <a class="nav-link" href="#faq">常见问题</a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容 -->
+        <div class="col-lg-9">
+            <h1 class="display-5 fw-bold mb-4">使用文档</h1>
+            <p class="lead text-muted mb-5">欢迎使用夜莺面试官，这份文档将帮助您快速上手。</p>
+
+            <!-- 快速开始 -->
+            <section id="getting-started" class="mb-5">
+                <h2 class="mb-3"><i class="fas fa-rocket text-primary me-2"></i>快速开始</h2>
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <h5>第一步：连接钱包</h5>
+                        <p class="text-muted">点击右上角"连接钱包"按钮，使用夜莺钱包完成登录。</p>
+
+                        <h5 class="mt-4">第二步：创建面试间</h5>
+                        <p class="text-muted">登录后，点击"创建面试间"按钮，上传您的简历PDF文件，系统会自动解析简历内容。</p>
+
+                        <h5 class="mt-4">第三步：开始面试</h5>
+                        <p class="text-muted">在面试间内创建新的面试会话，AI将根据您的简历生成针对性的面试问题。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 功能介绍 -->
+            <section id="features" class="mb-5">
+                <h2 class="mb-3"><i class="fas fa-star text-primary me-2"></i>功能介绍</h2>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-file-pdf text-danger me-2"></i>简历解析</h5>
+                                <p class="card-text text-muted">上传PDF简历，系统自动提取技能、项目经验、教育背景等关键信息。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-brain text-primary me-2"></i>智能题目生成</h5>
+                                <p class="card-text text-muted">基于RAG技术，AI会根据简历内容生成个性化的技术面试题。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-comments text-success me-2"></i>实时对话</h5>
+                                <p class="card-text text-muted">与AI面试官进行实时对话，模拟真实的面试场景。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-chart-bar text-info me-2"></i>面试报告</h5>
+                                <p class="card-text text-muted">面试结束后生成详细的评估报告，包含能力分析和改进建议。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 使用流程 -->
+            <section id="workflow" class="mb-5">
+                <h2 class="mb-3"><i class="fas fa-stream text-primary me-2"></i>使用流程</h2>
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="mb-4">
+                                <h5><span class="badge bg-primary me-2">1</span>创建面试间</h5>
+                                <p class="text-muted ms-4">上传简历，系统创建专属的面试间空间，并生成记忆ID用于长期存储。</p>
+                            </div>
+                            <div class="mb-4">
+                                <h5><span class="badge bg-primary me-2">2</span>创建面试会话</h5>
+                                <p class="text-muted ms-4">在面试间内可以创建多个面试会话，针对不同职位或技术方向。</p>
+                            </div>
+                            <div class="mb-4">
+                                <h5><span class="badge bg-primary me-2">3</span>AI提问与回答</h5>
+                                <p class="text-muted ms-4">AI面试官会根据简历内容提出问题，您可以文字或语音回答。</p>
+                            </div>
+                            <div class="mb-4">
+                                <h5><span class="badge bg-primary me-2">4</span>生成评估报告</h5>
+                                <p class="text-muted ms-4">面试结束后，系统自动生成详细的评估报告，可以下载PDF保存。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 常见问题 -->
+            <section id="faq" class="mb-5">
+                <h2 class="mb-3"><i class="fas fa-question-circle text-primary me-2"></i>常见问题</h2>
+
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                支持哪些简历格式？
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                目前仅支持PDF格式的简历。建议使用结构清晰、内容完整的简历以获得更好的解析效果。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                面试会话可以保存多久？
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                所有面试会话都会永久保存，您可以随时查看历史记录和评估报告。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                如何提高面试效果？
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                1. 上传内容详实的简历<br>
+                                2. 认真回答每个问题，提供具体案例<br>
+                                3. 使用追问功能深入探讨技术细节<br>
+                                4. 面试后仔细阅读评估报告
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                我的数据安全吗？
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                我们非常重视用户数据安全。所有简历和面试记录都经过加密存储，仅用于生成面试题和评估报告，不会用于其他用途。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

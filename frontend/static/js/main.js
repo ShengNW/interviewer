@@ -1,5 +1,5 @@
 /**
- * Yeying面试官系统 - 主JavaScript文件
+ * 夜莺面试官 - 主JavaScript文件
  */
 
 $(document).ready(function() {
@@ -26,7 +26,7 @@ function initializePage() {
     // 绑定全局事件
     bindGlobalEvents();
     
-    console.log('Yeying面试官系统已加载');
+    console.log('夜莺面试官已加载');
 }
 
 // 初始化Bootstrap提示工具

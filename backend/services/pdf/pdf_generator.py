@@ -71,7 +71,7 @@ class PDFReportGenerator:
 
         # 公司名称和报告标题
         story.append(Paragraph(
-            header.get('company_name', '夜影面试官系统'),
+            header.get('company_name', '夜莺面试官'),
             self.styles['ChineseTitle']
         ))
         story.append(Paragraph(

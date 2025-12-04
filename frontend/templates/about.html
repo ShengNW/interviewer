@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}关于我们 - 夜莺面试官{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center" style="margin-top: 60px;">
+        <div class="col-lg-10">
+            <!-- 页面标题 -->
+            <div class="text-center mb-5">
+                <img src="{{ url_for('static', filename='images/yeying-logo.png') }}"
+                     alt="夜莺" style="height: 100px; margin-bottom: 30px;">
+                <h1 class="display-4 fw-bold mb-3">关于夜莺面试官</h1>
+                <p class="lead text-muted">用AI技术赋能技术面试，让每个人都能获得更好的面试体验</p>
+            </div>
+
+            <!-- 产品介绍 -->
+            <section class="mb-5">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <h2 class="mb-4"><i class="fas fa-lightbulb text-warning me-2"></i>我们的愿景</h2>
+                        <p class="text-muted lead">
+                            夜莺面试官致力于通过先进的AI技术，为技术人员提供智能化的面试准备工具。
+                            我们相信，每个人都应该有机会充分展示自己的技术能力，而不应该因为面试技巧的不足而错失机会。
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 核心优势 -->
+            <section class="mb-5">
+                <h2 class="text-center mb-4">核心优势</h2>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-brain fa-3x text-primary"></i>
+                            </div>
+                            <h5>RAG技术加持</h5>
+                            <p class="text-muted">
+                                采用检索增强生成技术，基于简历内容生成精准的个性化面试题
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-shield-alt fa-3x text-success"></i>
+                            </div>
+                            <h5>数据安全保障</h5>
+                            <p class="text-muted">
+                                所有数据加密存储，严格遵守隐私保护规范，不会泄露用户信息
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-chart-line fa-3x text-info"></i>
+                            </div>
+                            <h5>专业评估报告</h5>
+                            <p class="text-muted">
+                                AI自动分析面试表现，生成详细的能力评估和改进建议
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 技术栈 -->
+            <section class="mb-5">
+                <div class="card border-0 bg-light">
+                    <div class="card-body p-5">
+                        <h2 class="mb-4"><i class="fas fa-code text-primary me-2"></i>技术架构</h2>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">后端技术</h5>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Python + Flask</li>
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>OpenAI GPT-4</li>
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>RAG (检索增强生成)</li>
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>PostgreSQL</li>
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>MinIO 对象存储</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="mb-3">前端技术</h5>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Bootstrap 5</li>
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>jQuery</li>
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Font Awesome</li>
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Jinja2 模板</li>
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Web3 集成</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 发展历程 -->
+            <section class="mb-5">
+                <h2 class="text-center mb-4">发展历程</h2>
+                <div class="timeline-vertical">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <span class="badge bg-primary p-2">2024.Q4</span>
+                                </div>
+                                <div>
+                                    <h5>产品发布</h5>
+                                    <p class="text-muted mb-0">夜莺面试官正式上线，提供基础的AI面试功能</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <span class="badge bg-info p-2">2025.Q1</span>
+                                </div>
+                                <div>
+                                    <h5>功能升级</h5>
+                                    <p class="text-muted mb-0">计划推出数字人面试官、语音交互等高级功能</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <span class="badge bg-success p-2">2025.Q2</span>
+                                </div>
+                                <div>
+                                    <h5>企业版推出</h5>
+                                    <p class="text-muted mb-0">支持企业级私有化部署和定制化需求</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 联系我们 -->
+            <section class="mb-5">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        <h2 class="mb-4"><i class="fas fa-envelope text-primary me-2"></i>联系我们</h2>
+                        <p class="text-muted mb-4">
+                            如有任何问题或建议，欢迎随时联系我们
+                        </p>
+                        <div class="row justify-content-center">
+                            <div class="col-md-4 mb-3">
+                                <i class="fas fa-envelope fa-2x text-primary mb-2"></i>
+                                <p class="mb-0">邮箱</p>
+                                <p class="text-muted">support@yeying.ai</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <i class="fab fa-github fa-2x text-dark mb-2"></i>
+                                <p class="mb-0">GitHub</p>
+                                <p class="text-muted">github.com/yeying-ai</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <i class="fab fa-twitter fa-2x text-info mb-2"></i>
+                                <p class="mb-0">Twitter</p>
+                                <p class="text-muted">@yeying_ai</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

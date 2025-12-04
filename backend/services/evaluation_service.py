@@ -188,7 +188,7 @@ class InterviewEvaluationService:
                 "total_questions": len(qa_pairs)
             },
             "report_header": {
-                "company_name": "Yeying面试官系统",
+                "company_name": "夜莺面试官",
                 "report_title": f"{session_info.get('session_name', '面试会话')}-模拟面试报告",
                 "generated_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "overall_grade": grade,

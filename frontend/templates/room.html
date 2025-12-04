@@ -108,7 +108,7 @@
                         </div>
                     </div>
 
-                    <div class="card-body" onclick="location.href='{{ url_for('session.session_detail', session_id=session['id']) }}'">
+                    <div class="card-body" style="cursor: pointer;" onclick="location.href='{{ url_for('session.session_detail', session_id=session['id']) }}'">
                         <div class="mb-2">
                             <strong>会话ID:</strong>
                             <code class="text-info">{{ session['id'][:8] }}...</code>
@@ -128,7 +128,7 @@
                         </div>
                     </div>
 
-                    <div class="card-footer bg-transparent" onclick="location.href='{{ url_for('session.session_detail', session_id=session['id']) }}'">
+                    <div class="card-footer bg-transparent" style="cursor: pointer;" onclick="location.href='{{ url_for('session.session_detail', session_id=session['id']) }}'">
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
                                 <i class="fas fa-clock me-1"></i>
