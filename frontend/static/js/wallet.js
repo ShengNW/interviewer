@@ -153,13 +153,15 @@ function updateWalletUI(isConnected) {
     const walletInfo = document.getElementById('walletInfo');
     const walletAddress = document.getElementById('walletAddress');
 
-    if (isConnected && currentAccount) {
-        connectBtn.classList.add('d-none');
-        walletInfo.classList.remove('d-none');
+    // 未登录页面：只更新连接按钮状态
+    if (connectBtn && isConnected && currentAccount) {
+        // 连接成功后会自动刷新页面，所以这里不需要特别处理
+        return;
+    }
+
+    // 已登录页面：显示钱包地址
+    if (walletAddress && currentAccount) {
         walletAddress.textContent = formatAddress(currentAccount);
-    } else {
-        connectBtn.classList.remove('d-none');
-        walletInfo.classList.add('d-none');
     }
 }
 

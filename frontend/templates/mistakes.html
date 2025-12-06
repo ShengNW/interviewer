@@ -1,0 +1,246 @@
+{% extends "base_user.html" %}
+
+{% block title %}我的错题集 - 夜莺面试官{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- 页面标题 -->
+    <div class="row mb-4" style="margin-top: 40px;">
+        <div class="col-12">
+            <h2 class="fw-bold mb-1" style="font-size: 2rem;">
+                <i class="fas fa-bookmark me-3" style="color: var(--accent-blue);"></i>
+                我的错题集
+            </h2>
+            <p class="text-muted mb-0">回顾收藏的题目，针对性复习薄弱知识点</p>
+        </div>
+    </div>
+
+    <!-- 筛选标签 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="text-muted me-2">分类筛选:</span>
+                <button class="btn btn-sm btn-primary" style="border-radius: 20px; padding: 0.4rem 1.2rem;">
+                    全部 <span class="badge bg-white text-primary ms-1">12</span>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" style="border-radius: 20px; padding: 0.4rem 1.2rem;">
+                    算法 <span class="badge bg-secondary ms-1">5</span>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" style="border-radius: 20px; padding: 0.4rem 1.2rem;">
+                    系统设计 <span class="badge bg-secondary ms-1">3</span>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" style="border-radius: 20px; padding: 0.4rem 1.2rem;">
+                    前端 <span class="badge bg-secondary ms-1">4</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 错题列表 -->
+    <div class="row g-4 mb-5">
+        <!-- 示例错题卡片 -->
+        <div class="col-lg-6">
+            <div class="card mistake-card h-100" style="transition: all 0.3s ease;">
+                <div class="card-header d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge me-2" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.4rem 0.8rem; border-radius: 6px;">
+                                算法
+                            </span>
+                            <span class="badge" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24; padding: 0.4rem 0.8rem; border-radius: 6px;">
+                                中等
+                            </span>
+                        </div>
+                        <h6 class="mb-1 fw-bold">实现 LRU 缓存淘汰算法</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i>收藏于 2024-01-15
+                        </small>
+                    </div>
+                    <button class="btn btn-sm btn-light" style="border-radius: 8px;">
+                        <i class="fas fa-bookmark" style="color: #fbbf24;"></i>
+                    </button>
+                </div>
+
+                <div class="card-body">
+                    <p class="text-muted mb-3" style="font-size: 0.95rem; line-height: 1.6;">
+                        设计并实现一个满足 LRU (最近最少使用) 缓存约束的数据结构。要求实现 get 和 put 方法，时间复杂度均为 O(1)...
+                    </p>
+                    <div class="d-flex gap-2">
+                        <span class="badge" style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); padding: 0.4rem 0.8rem; border-radius: 6px;">
+                            <i class="fas fa-hashtag me-1"></i>哈希表
+                        </span>
+                        <span class="badge" style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); padding: 0.4rem 0.8rem; border-radius: 6px;">
+                            <i class="fas fa-hashtag me-1"></i>链表
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3 text-muted" style="font-size: 0.9rem;">
+                        <span><i class="fas fa-redo me-1"></i>复习 2 次</span>
+                        <span><i class="fas fa-clock me-1"></i>10 分钟前</span>
+                    </div>
+                    <button class="btn btn-sm btn-primary" style="border-radius: 8px;">查看详情</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card mistake-card h-100" style="transition: all 0.3s ease;">
+                <div class="card-header d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge me-2" style="background: rgba(79, 172, 254, 0.1); color: #4facfe; padding: 0.4rem 0.8rem; border-radius: 6px;">
+                                前端
+                            </span>
+                            <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green); padding: 0.4rem 0.8rem; border-radius: 6px;">
+                                简单
+                            </span>
+                        </div>
+                        <h6 class="mb-1 fw-bold">解释 React Hooks 的闭包陷阱</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i>收藏于 2024-01-14
+                        </small>
+                    </div>
+                    <button class="btn btn-sm btn-light" style="border-radius: 8px;">
+                        <i class="fas fa-bookmark" style="color: #fbbf24;"></i>
+                    </button>
+                </div>
+
+                <div class="card-body">
+                    <p class="text-muted mb-3" style="font-size: 0.95rem; line-height: 1.6;">
+                        在使用 useState 和 useEffect 时，如何避免闭包导致的状态不更新问题？请举例说明常见场景和解决方案...
+                    </p>
+                    <div class="d-flex gap-2">
+                        <span class="badge" style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); padding: 0.4rem 0.8rem; border-radius: 6px;">
+                            <i class="fas fa-hashtag me-1"></i>React
+                        </span>
+                        <span class="badge" style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); padding: 0.4rem 0.8rem; border-radius: 6px;">
+                            <i class="fas fa-hashtag me-1"></i>Hooks
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3 text-muted" style="font-size: 0.9rem;">
+                        <span><i class="fas fa-redo me-1"></i>复习 1 次</span>
+                        <span><i class="fas fa-clock me-1"></i>1 天前</span>
+                    </div>
+                    <button class="btn btn-sm btn-primary" style="border-radius: 8px;">查看详情</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card mistake-card h-100" style="transition: all 0.3s ease;">
+                <div class="card-header d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge me-2" style="background: rgba(168, 85, 247, 0.1); color: var(--accent-purple); padding: 0.4rem 0.8rem; border-radius: 6px;">
+                                系统设计
+                            </span>
+                            <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.4rem 0.8rem; border-radius: 6px;">
+                                困难
+                            </span>
+                        </div>
+                        <h6 class="mb-1 fw-bold">设计一个分布式限流系统</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i>收藏于 2024-01-13
+                        </small>
+                    </div>
+                    <button class="btn btn-sm btn-light" style="border-radius: 8px;">
+                        <i class="fas fa-bookmark" style="color: #fbbf24;"></i>
+                    </button>
+                </div>
+
+                <div class="card-body">
+                    <p class="text-muted mb-3" style="font-size: 0.95rem; line-height: 1.6;">
+                        如何设计一个支持分布式环境的限流系统？需要考虑令牌桶、漏桶算法的选择，以及 Redis 的使用...
+                    </p>
+                    <div class="d-flex gap-2">
+                        <span class="badge" style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); padding: 0.4rem 0.8rem; border-radius: 6px;">
+                            <i class="fas fa-hashtag me-1"></i>分布式
+                        </span>
+                        <span class="badge" style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); padding: 0.4rem 0.8rem; border-radius: 6px;">
+                            <i class="fas fa-hashtag me-1"></i>限流
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3 text-muted" style="font-size: 0.9rem;">
+                        <span><i class="fas fa-redo me-1"></i>复习 3 次</span>
+                        <span><i class="fas fa-clock me-1"></i>2 天前</span>
+                    </div>
+                    <button class="btn btn-sm btn-primary" style="border-radius: 8px;">查看详情</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 空状态（无错题时显示） -->
+        <!-- <div class="col-12 text-center py-5">
+            <i class="fas fa-bookmark fa-4x text-muted mb-3" style="opacity: 0.3;"></i>
+            <h5 class="text-muted mb-2">还没有收藏的题目</h5>
+            <p class="text-muted">在面试会话中点击收藏按钮，将重要题目添加到错题集</p>
+        </div> -->
+    </div>
+
+    <!-- 统计面板 -->
+    <div class="row g-4" style="margin-top: 3rem;">
+        <div class="col-12 mb-3">
+            <h5 class="fw-bold" style="color: #4a5568;">
+                <i class="fas fa-chart-bar me-2"></i>错题统计
+            </h5>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-center" style="padding: 1.5rem 1rem;">
+                <div style="width: 50px; height: 50px; margin: 0 auto 0.75rem; background: rgba(102, 126, 234, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-bookmark" style="font-size: 1.5rem; color: var(--accent-blue);"></i>
+                </div>
+                <h4 class="fw-bold mb-1" style="color: var(--accent-blue);">12</h4>
+                <p class="mb-0 text-muted" style="font-size: 0.9rem;">收藏总数</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-center" style="padding: 1.5rem 1rem;">
+                <div style="width: 50px; height: 50px; margin: 0 auto 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-check-circle" style="font-size: 1.5rem; color: var(--accent-green);"></i>
+                </div>
+                <h4 class="fw-bold mb-1" style="color: var(--accent-green);">7</h4>
+                <p class="mb-0 text-muted" style="font-size: 0.9rem;">已掌握</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-center" style="padding: 1.5rem 1rem;">
+                <div style="width: 50px; height: 50px; margin: 0 auto 0.75rem; background: rgba(251, 191, 36, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-redo" style="font-size: 1.5rem; color: #fbbf24;"></i>
+                </div>
+                <h4 class="fw-bold mb-1" style="color: #fbbf24;">18</h4>
+                <p class="mb-0 text-muted" style="font-size: 0.9rem;">复习次数</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-center" style="padding: 1.5rem 1rem;">
+                <div style="width: 50px; height: 50px; margin: 0 auto 0.75rem; background: rgba(168, 85, 247, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-fire" style="font-size: 1.5rem; color: var(--accent-purple);"></i>
+                </div>
+                <h4 class="fw-bold mb-1" style="color: var(--accent-purple);">5</h4>
+                <p class="mb-0 text-muted" style="font-size: 0.9rem;">本周复习</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.mistake-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: white;
+}
+</style>
+{% endblock %}

@@ -52,6 +52,33 @@ def create_room():
     return redirect(url_for('room.room_detail', room_id=room.id))
 
 
+@room_bp.route('/rooms')
+@require_auth
+def rooms_list():
+    """我的面试间列表页面 - 显示所有面试间"""
+    current_user = request.current_user
+    rooms = RoomService.get_rooms_by_owner(current_user)
+    rooms_dict = [RoomService.to_dict(room) for room in rooms]
+
+    return render_template('rooms.html', rooms=rooms_dict)
+
+
+@room_bp.route('/resumes')
+@require_auth
+def resumes_list():
+    """我的简历列表页面"""
+    # TODO: 后续实现简历管理功能
+    return render_template('resumes.html')
+
+
+@room_bp.route('/mistakes')
+@require_auth
+def mistakes_list():
+    """我的错题集页面"""
+    # TODO: 后续实现错题集功能
+    return render_template('mistakes.html')
+
+
 @room_bp.route('/room/<room_id>')
 @validate_uuid_param('room_id')
 @require_auth
