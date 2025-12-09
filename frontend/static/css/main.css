@@ -50,6 +50,32 @@ body {
     overflow-x: hidden;
 }
 
+/* 导航链接hover效果 */
+.nav-link {
+    cursor: pointer;
+    transition: all 0.3s ease !important;
+}
+
+.nav-link:hover {
+    background: rgba(102, 126, 234, 0.1) !important;
+    color: #667eea !important;
+    border-radius: 10px;
+    transform: translateY(-1px);
+}
+
+.nav-link:active {
+    transform: translateY(0);
+}
+
+/* 退出按钮hover效果 */
+.btn-outline-secondary:hover {
+    background: rgba(108, 117, 125, 0.1) !important;
+    border-color: #6c757d !important;
+    color: #6c757d !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(108, 117, 125, 0.2);
+}
+
 /* 动态渐变背景 - 浅色版 */
 body::before {
     content: '';
@@ -129,12 +155,28 @@ main {
     border-radius: 16px;
     box-shadow: var(--shadow-sm);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: default;
 }
 
 .card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-md);
     border-color: rgba(91, 124, 250, 0.3);
+}
+
+/* 可点击的卡片 */
+.card.session-card,
+.card.room-card,
+[onclick] .card,
+.card[style*="cursor: pointer"] {
+    cursor: pointer !important;
+}
+
+.card.session-card:hover,
+.card.room-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.4);
 }
 
 .card-header {
@@ -147,10 +189,21 @@ main {
     padding: 1.5rem;
 }
 
+/* 可点击的卡片body hover效果 */
+.card-body[style*="cursor: pointer"]:hover {
+    background: rgba(102, 126, 234, 0.03);
+}
+
 .card-footer {
     background: rgba(0, 0, 0, 0.01);
     border-top: 1px solid var(--border-color);
     padding: 1rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+/* 可点击的卡片footer hover效果 */
+.card-footer[style*="cursor: pointer"]:hover {
+    background: rgba(102, 126, 234, 0.05);
 }
 
 /* ==================== 面试间和会话卡片 ==================== */
@@ -189,6 +242,17 @@ main {
     border: none;
     position: relative;
     overflow: hidden;
+    cursor: pointer;
+}
+
+/* 通用按钮hover效果 */
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
 }
 
 .btn-primary {
@@ -200,6 +264,34 @@ main {
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    filter: brightness(1.1);
+}
+
+/* 小按钮样式 */
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-sm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* 删除按钮hover效果 */
+.delete-room-btn,
+.delete-session-btn,
+.btn-outline-light {
+    transition: all 0.3s ease;
+}
+
+.delete-room-btn:hover,
+.delete-session-btn:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
 }
 
 .btn-outline-light {
@@ -209,9 +301,32 @@ main {
 }
 
 .btn-outline-light:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    color: white !important;
     transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
+/* 其他按钮样式 */
+.btn-light:hover {
+    background: rgba(248, 250, 252, 1) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn-success:hover {
+    background: var(--gradient-success) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    filter: brightness(1.1);
+}
+
+.btn-info:hover {
+    background: var(--gradient-success) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(91, 124, 250, 0.4);
+    filter: brightness(1.1);
 }
 
 .btn-lg {
@@ -618,4 +733,21 @@ h1, h2, h3, h4, h5, h6 {
 
 .shadow-neon {
     box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+/* ==================== Modal修复 ==================== */
+/* 修复Bootstrap modal backdrop阻止点击的问题 */
+.modal-backdrop {
+    pointer-events: none !important;
+    opacity: 0 !important; /* 完全透明，不显示灰色遮罩 */
+}
+
+/* 确保modal本身可以接收点击事件 */
+.modal {
+    pointer-events: auto !important;
+}
+
+/* 确保modal内的内容可以交互 */
+.modal-dialog {
+    pointer-events: auto !important;
 }

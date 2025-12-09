@@ -96,6 +96,32 @@ async function performWalletLogin() {
             method: 'personal_sign',
             params: [challenge, address]
         });
+
+        // 验证签名
+        if (!signature) {
+            throw new Error('签名失败：未获取到有效签名');
+        }
+
+        // 检查是否返回了错误对象
+        if (typeof signature === 'object') {
+            if (signature.error) {
+                if (signature.error === 'Wallet locked' || (typeof signature.error === 'string' && signature.error.includes('locked'))) {
+                    throw new Error('钱包已锁定，请先解锁钱包后再试');
+                }
+                throw new Error(`签名失败：${signature.error}`);
+            }
+            throw new Error('签名返回了无效的对象');
+        }
+
+        // 验证签名格式（应该是 0x 开头的十六进制字符串）
+        if (typeof signature !== 'string') {
+            throw new Error('签名格式无效：不是字符串');
+        }
+
+        if (!signature.startsWith('0x') || signature.length < 130) {
+            throw new Error('签名格式无效，请重试');
+        }
+
         console.log('签名成功');
 
         // 4. 验证签名

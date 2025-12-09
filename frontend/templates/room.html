@@ -265,11 +265,6 @@
 <script>
 const ROOM_ID = '{{ room.id }}';
 
-// 页面加载时检查简历状态
-document.addEventListener('DOMContentLoaded', async function() {
-    await checkResumeStatus();
-});
-
 // 检查简历状态
 async function checkResumeStatus() {
     try {
@@ -325,99 +320,6 @@ async function checkResumeStatus() {
     }
 }
 
-// 上传简历
-document.getElementById('uploadResumeBtn').addEventListener('click', async function() {
-    const fileInput = document.getElementById('resumeFile');
-    const uploadProgress = document.getElementById('uploadProgress');
-    const uploadSuccess = document.getElementById('uploadSuccess');
-    const uploadError = document.getElementById('uploadError');
-    const uploadBtn = this;
-
-    // 验证文件
-    if (!fileInput.files || !fileInput.files[0]) {
-        uploadError.querySelector('#errorMessage').textContent = '请选择PDF文件';
-        uploadError.style.display = 'block';
-        return;
-    }
-
-    const file = fileInput.files[0];
-
-    // 验证文件类型
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
-        uploadError.querySelector('#errorMessage').textContent = '只支持PDF格式文件';
-        uploadError.style.display = 'block';
-        return;
-    }
-
-    // 验证文件大小（200MB）
-    if (file.size > 200 * 1024 * 1024) {
-        uploadError.querySelector('#errorMessage').textContent = '文件大小超过200MB限制';
-        uploadError.style.display = 'block';
-        return;
-    }
-
-    // 重置提示
-    uploadSuccess.style.display = 'none';
-    uploadError.style.display = 'none';
-
-    // 显示进度
-    uploadProgress.style.display = 'block';
-    uploadBtn.disabled = true;
-    fileInput.disabled = true;
-
-    try {
-        // 创建FormData
-        const formData = new FormData();
-        formData.append('resume', file);
-
-        // 上传文件
-        const response = await fetch(`/upload_resume/${ROOM_ID}`, {
-            method: 'POST',
-            body: formData
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            // 上传成功
-            uploadProgress.style.display = 'none';
-            uploadSuccess.querySelector('#successMessage').textContent = result.message || '简历上传成功！';
-            uploadSuccess.style.display = 'block';
-
-            // 2秒后关闭模态框并刷新简历状态
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('uploadResumeModal'));
-                modal.hide();
-                checkResumeStatus();
-            }, 2000);
-        } else {
-            // 上传失败
-            uploadProgress.style.display = 'none';
-            uploadError.querySelector('#errorMessage').textContent = result.error || '上传失败';
-            uploadError.style.display = 'block';
-            uploadBtn.disabled = false;
-            fileInput.disabled = false;
-        }
-    } catch (error) {
-        // 网络错误
-        uploadProgress.style.display = 'none';
-        uploadError.querySelector('#errorMessage').textContent = '网络错误: ' + error.message;
-        uploadError.style.display = 'block';
-        uploadBtn.disabled = false;
-        fileInput.disabled = false;
-    }
-});
-
-// 重置表单
-document.getElementById('uploadResumeModal').addEventListener('hidden.bs.modal', function() {
-    document.getElementById('uploadResumeForm').reset();
-    document.getElementById('uploadProgress').style.display = 'none';
-    document.getElementById('uploadSuccess').style.display = 'none';
-    document.getElementById('uploadError').style.display = 'none';
-    document.getElementById('uploadResumeBtn').disabled = false;
-    document.getElementById('resumeFile').disabled = false;
-});
-
 // 上传 JD
 async function uploadJD() {
     const company = document.getElementById('jdCompanyInput').value.trim();
@@ -467,12 +369,136 @@ async function uploadJD() {
     }
 }
 
-// 阻止未上传简历时创建会话
-document.getElementById('createSessionBtn').addEventListener('click', function(e) {
-    if (this.classList.contains('disabled')) {
-        e.preventDefault();
-        alert('请先上传简历后再创建面试会话！');
-        return false;
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', async function() {
+    // 清理页面加载时可能残留的backdrop
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+
+    // 检查简历状态
+    await checkResumeStatus();
+
+    // 上传简历按钮事件
+    const uploadResumeBtn = document.getElementById('uploadResumeBtn');
+    if (uploadResumeBtn) {
+        uploadResumeBtn.addEventListener('click', async function() {
+            const fileInput = document.getElementById('resumeFile');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const uploadSuccess = document.getElementById('uploadSuccess');
+            const uploadError = document.getElementById('uploadError');
+            const uploadBtn = this;
+
+            // 验证文件
+            if (!fileInput.files || !fileInput.files[0]) {
+                uploadError.querySelector('#errorMessage').textContent = '请选择PDF文件';
+                uploadError.style.display = 'block';
+                return;
+            }
+
+            const file = fileInput.files[0];
+
+            // 验证文件类型
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                uploadError.querySelector('#errorMessage').textContent = '只支持PDF格式文件';
+                uploadError.style.display = 'block';
+                return;
+            }
+
+            // 验证文件大小（200MB）
+            if (file.size > 200 * 1024 * 1024) {
+                uploadError.querySelector('#errorMessage').textContent = '文件大小超过200MB限制';
+                uploadError.style.display = 'block';
+                return;
+            }
+
+            // 重置提示
+            uploadSuccess.style.display = 'none';
+            uploadError.style.display = 'none';
+
+            // 显示进度
+            uploadProgress.style.display = 'block';
+            uploadBtn.disabled = true;
+            fileInput.disabled = true;
+
+            try {
+                // 创建FormData
+                const formData = new FormData();
+                formData.append('resume', file);
+
+                // 上传文件
+                const response = await fetch(`/upload_resume/${ROOM_ID}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // 上传成功
+                    uploadProgress.style.display = 'none';
+                    uploadSuccess.querySelector('#successMessage').textContent = result.message || '简历上传成功！';
+                    uploadSuccess.style.display = 'block';
+
+                    // 2秒后关闭模态框并刷新简历状态
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('uploadResumeModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        checkResumeStatus();
+                    }, 2000);
+                } else {
+                    // 上传失败
+                    uploadProgress.style.display = 'none';
+                    uploadError.querySelector('#errorMessage').textContent = result.error || '上传失败';
+                    uploadError.style.display = 'block';
+                    uploadBtn.disabled = false;
+                    fileInput.disabled = false;
+                }
+            } catch (error) {
+                // 网络错误
+                console.error('[Room] Upload error:', error);
+                uploadProgress.style.display = 'none';
+                uploadError.querySelector('#errorMessage').textContent = '网络错误: ' + error.message;
+                uploadError.style.display = 'block';
+                uploadBtn.disabled = false;
+                fileInput.disabled = false;
+            }
+        });
+    }
+
+    // 重置表单事件
+    const uploadResumeModal = document.getElementById('uploadResumeModal');
+    if (uploadResumeModal) {
+        uploadResumeModal.addEventListener('hidden.bs.modal', function() {
+            const form = document.getElementById('uploadResumeForm');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const uploadSuccess = document.getElementById('uploadSuccess');
+            const uploadError = document.getElementById('uploadError');
+            const uploadBtn = document.getElementById('uploadResumeBtn');
+            const resumeFile = document.getElementById('resumeFile');
+
+            if (form) form.reset();
+            if (uploadProgress) uploadProgress.style.display = 'none';
+            if (uploadSuccess) uploadSuccess.style.display = 'none';
+            if (uploadError) uploadError.style.display = 'none';
+            if (uploadBtn) uploadBtn.disabled = false;
+            if (resumeFile) resumeFile.disabled = false;
+        });
+    }
+
+    // 阻止未上传简历时创建会话
+    const createSessionBtn = document.getElementById('createSessionBtn');
+    if (createSessionBtn) {
+        createSessionBtn.addEventListener('click', function(e) {
+            if (this.classList.contains('disabled')) {
+                e.preventDefault();
+                alert('请先上传简历后再创建面试会话！');
+                return false;
+            }
+        });
     }
 });
 </script>
