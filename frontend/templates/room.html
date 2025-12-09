@@ -36,10 +36,10 @@
                             <i class="fas fa-file-alt me-1"></i>
                             <span id="uploadJDBtnText">上传JD</span>
                         </button>
-                        <a href="{{ url_for('session.create_session', room_id=room.id) }}" class="btn btn-success btn-sm me-2" id="createSessionBtn">
+                        <button type="button" class="btn btn-success btn-sm me-2" id="createSessionBtn" onclick="createSession()">
                             <i class="fas fa-plus me-1"></i>
-                            创建会话
-                        </a>
+                            <span id="createSessionBtnText">创建会话</span>
+                        </button>
                         <button class="btn btn-outline-light btn-sm delete-room-btn"
                                 data-room-id="{{ room.id }}"
                                 data-room-name="{{ room.memory_id }}">
@@ -108,7 +108,7 @@
                         </div>
                     </div>
 
-                    <div class="card-body" style="cursor: pointer;" onclick="location.href='{{ url_for('session.session_detail', session_id=session['id']) }}'">
+                    <div class="card-body session-card-body" style="cursor: pointer;" data-session-id="{{ session['id'] }}" onclick="navigateToSession(this)">
                         <div class="mb-2">
                             <strong>会话ID:</strong>
                             <code class="text-info">{{ session['id'][:8] }}...</code>
@@ -128,7 +128,7 @@
                         </div>
                     </div>
 
-                    <div class="card-footer bg-transparent" style="cursor: pointer;" onclick="location.href='{{ url_for('session.session_detail', session_id=session['id']) }}'">
+                    <div class="card-footer bg-transparent session-card-footer" style="cursor: pointer;" data-session-id="{{ session['id'] }}" onclick="navigateToSession(this)">
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
                                 <i class="fas fa-clock me-1"></i>
@@ -152,10 +152,10 @@
                 <p class="text-muted">点击上方按钮创建第一个面试会话</p>
             </div>
             
-            <a href="{{ url_for('session.create_session', room_id=room.id) }}" class="btn btn-primary btn-lg">
+            <button type="button" class="btn btn-primary btn-lg" onclick="createSession()">
                 <i class="fas fa-plus me-2"></i>
                 创建面试会话
-            </a>
+            </button>
         </div>
         {% endif %}
     </div>
@@ -264,6 +264,84 @@
 {% block extra_js %}
 <script>
 const ROOM_ID = '{{ room.id }}';
+
+// 创建面试会话
+async function createSession() {
+    const createSessionBtn = document.getElementById('createSessionBtn');
+    const btnText = document.getElementById('createSessionBtnText');
+
+    // 检查是否已禁用
+    if (createSessionBtn.classList.contains('disabled') || createSessionBtn.disabled) {
+        alert('请先上传简历后再创建面试会话！');
+        return;
+    }
+
+    // 显示加载状态
+    const icon = createSessionBtn.querySelector('i');
+    const originalIcon = icon ? icon.className : '';
+    const originalText = btnText ? btnText.textContent : '创建会话';
+
+    createSessionBtn.disabled = true;
+    if (icon) {
+        icon.className = 'fas fa-spinner fa-spin me-1';
+    }
+    if (btnText) {
+        btnText.textContent = '创建中...';
+    }
+
+    try {
+        // 重定向到创建会话的URL
+        window.location.href = `/create_session/${ROOM_ID}`;
+    } catch (error) {
+        // 恢复按钮状态
+        console.error('创建会话失败:', error);
+        createSessionBtn.disabled = false;
+        if (icon) {
+            icon.className = originalIcon;
+        }
+        if (btnText) {
+            btnText.textContent = originalText;
+        }
+        alert('创建会话失败，请重试');
+    }
+}
+
+// 导航到会话详情页
+function navigateToSession(element) {
+    const sessionId = element.dataset.sessionId;
+    if (!sessionId) return;
+
+    // 添加加载样式
+    const card = element.closest('.session-card');
+    if (card) {
+        // 禁用所有可点击元素
+        card.querySelectorAll('[onclick]').forEach(el => {
+            el.style.pointerEvents = 'none';
+        });
+
+        // 添加半透明遮罩和加载动画
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border-radius: 0.375rem;
+        `;
+        overlay.innerHTML = '<i class="fas fa-spinner fa-spin fa-2x text-primary"></i>';
+        card.style.position = 'relative';
+        card.appendChild(overlay);
+    }
+
+    // 导航到会话详情页
+    window.location.href = `/session/${sessionId}`;
+}
 
 // 检查简历状态
 async function checkResumeStatus() {
@@ -486,18 +564,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (uploadError) uploadError.style.display = 'none';
             if (uploadBtn) uploadBtn.disabled = false;
             if (resumeFile) resumeFile.disabled = false;
-        });
-    }
-
-    // 阻止未上传简历时创建会话
-    const createSessionBtn = document.getElementById('createSessionBtn');
-    if (createSessionBtn) {
-        createSessionBtn.addEventListener('click', function(e) {
-            if (this.classList.contains('disabled')) {
-                e.preventDefault();
-                alert('请先上传简历后再创建面试会话！');
-                return false;
-            }
         });
     }
 });

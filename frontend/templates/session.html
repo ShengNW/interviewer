@@ -303,28 +303,103 @@
 
 {% block extra_js %}
 <script>
-// 由后端注入：数字人启动提示与链接（可能为 null）
-const DH_BOOT_MESSAGE = {{ dh_message|tojson if dh_message else 'null' }};
-const DH_CONNECT_URL = {{ dh_connect_url|tojson if dh_connect_url else 'null' }};
+// 由后端注入：数字人启动提示与链接（将异步加载）
+let DH_BOOT_MESSAGE = {{ dh_message|tojson if dh_message else 'null' }};
+let DH_CONNECT_URL = {{ dh_connect_url|tojson if dh_connect_url else 'null' }};
 
 // 全局会话ID、房间ID和当前轮次状态
 const SESSION_ID = '{{ session.id }}';
 const ROOM_ID = '{{ session.room_id }}';
 let currentRoundId = null;
 let currentQuestionData = null;
+let roundsLoaded = false; // 标记轮次是否已加载
+
+// 异步加载数字人
+async function loadDigitalHuman() {
+    try {
+        const response = await fetch(`/api/session/${SESSION_ID}/boot_dh`, {
+            method: 'POST'
+        });
+        const result = await response.json();
+
+        if (result.success && result.data) {
+            DH_BOOT_MESSAGE = result.data.message;
+            DH_CONNECT_URL = result.data.connect_url;
+
+            if (DH_BOOT_MESSAGE) {
+                addMessage('ai', DH_BOOT_MESSAGE);
+            }
+        }
+    } catch (error) {
+        console.warn('加载数字人失败:', error);
+    }
+}
+
+// 异步加载轮次数据
+async function loadSessionRounds() {
+    if (roundsLoaded) return; // 避免重复加载
+
+    try {
+        const response = await fetch(`/api/session/${SESSION_ID}/rounds`);
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.length > 0) {
+            roundsLoaded = true;
+
+            // 渲染轮次到页面
+            const chatMessages = document.getElementById('chatMessages');
+            result.data.forEach(round => {
+                insertRoundHeader(round);
+            });
+
+            // 检查进行中的轮次
+            await checkActiveRound();
+        }
+    } catch (error) {
+        console.warn('加载轮次数据失败:', error);
+    }
+}
+
+// 插入轮次header到页面
+function insertRoundHeader(round) {
+    const chatMessages = document.getElementById('chatMessages');
+    const roundHeader = document.createElement('div');
+    roundHeader.className = 'round-header';
+    roundHeader.dataset.roundId = round.id;
+    roundHeader.dataset.roundIndex = round.round_index;
+    roundHeader.innerHTML = `
+        <div class="round-info">
+            <i class="fas fa-layer-group me-2"></i>
+            <strong>第 ${round.round_index} 轮面试</strong>
+            <span class="badge bg-primary ms-2">${round.questions_count} 个问题</span>
+        </div>
+    `;
+    chatMessages.appendChild(roundHeader);
+
+    // 渲染该轮次的问题
+    if (round.questions && round.questions.length > 0) {
+        round.questions.forEach((qa, index) => {
+            // 添加问题消息
+            addMessage('ai', qa.question, false);
+
+            // 如果有回答，添加回答消息
+            if (qa.answer) {
+                addMessage('user', qa.answer, false);
+            }
+        });
+    }
+}
 
 // 页面加载完成后初始化
 $(document).ready(async function() {
     scrollToBottom();
     console.log('面试会话页面已加载');
 
-    // 如果有数字人提示则显示
-    if (DH_BOOT_MESSAGE) {
-        addMessage('ai', DH_BOOT_MESSAGE);
-    }
+    // 异步加载数字人（不阻塞页面）
+    loadDigitalHuman();
 
-    // 检查是否有进行中的轮次
-    await checkActiveRound();
+    // 异步加载轮次数据（不阻塞页面）
+    await loadSessionRounds();
 
     // 检查已有报告状态
     await checkExistingReports();
