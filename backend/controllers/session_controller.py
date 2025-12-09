@@ -61,11 +61,8 @@ def session_detail(session_id):
         logger.warning(f"Session not found: {session_id}")
         return "面试会话不存在", 404
 
-    # 启动数字人
-    dh_message, dh_connect_url = _boot_digital_human(session)
-
-    # 获取轮次数据
-    rounds_dict = _load_session_rounds(session)
+    # 快速渲染页面，不等待耗时操作
+    # 数字人和轮次数据将通过前端异步加载
 
     # 获取简历数据（从session关联的room获取）
     room_id = session.room.id
@@ -76,11 +73,52 @@ def session_detail(session_id):
 
     return render_template('session.html',
                          session=SessionService.to_dict(session),
-                         rounds=rounds_dict,
+                         rounds=[],  # 空数组，将由前端异步加载
                          resume=resume_data,
                          has_custom_jd=has_custom_jd,
-                         dh_message=dh_message,
-                         dh_connect_url=dh_connect_url)
+                         dh_message=None,  # 将由前端异步加载
+                         dh_connect_url=None)  # 将由前端异步加载
+
+
+@session_bp.route('/api/session/<session_id>/boot_dh', methods=['POST'])
+@require_auth
+@require_resource_owner('session')
+def boot_digital_human_async(session_id):
+    """异步启动数字人服务"""
+    from backend.common.response import ApiResponse
+
+    session = SessionService.get_session(session_id)
+    if not session:
+        return ApiResponse.not_found("面试会话")
+
+    try:
+        dh_message, dh_connect_url = _boot_digital_human(session)
+        return ApiResponse.success(data={
+            'message': dh_message,
+            'connect_url': dh_connect_url
+        })
+    except Exception as e:
+        logger.error(f"Failed to boot digital human: {e}")
+        return ApiResponse.internal_error(f"启动数字人失败: {str(e)}")
+
+
+@session_bp.route('/api/session/<session_id>/rounds', methods=['GET'])
+@require_auth
+@require_resource_owner('session')
+def get_session_rounds_async(session_id):
+    """异步加载会话轮次数据"""
+    from backend.common.response import ApiResponse
+
+    session = SessionService.get_session(session_id)
+    if not session:
+        return ApiResponse.not_found("面试会话")
+
+    try:
+        rounds_dict = _load_session_rounds(session)
+        return ApiResponse.success(data=rounds_dict)
+    except Exception as e:
+        logger.error(f"Failed to load session rounds: {e}")
+        return ApiResponse.internal_error(f"加载轮次数据失败: {str(e)}")
 
 
 # ==================== 私有辅助函数 ====================

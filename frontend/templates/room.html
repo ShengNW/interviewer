@@ -36,10 +36,10 @@
                             <i class="fas fa-file-alt me-1"></i>
                             <span id="uploadJDBtnText">上传JD</span>
                         </button>
-                        <a href="{{ url_for('session.create_session', room_id=room.id) }}" class="btn btn-success btn-sm me-2" id="createSessionBtn">
+                        <button type="button" class="btn btn-success btn-sm me-2" id="createSessionBtn" onclick="createSession()">
                             <i class="fas fa-plus me-1"></i>
-                            创建会话
-                        </a>
+                            <span id="createSessionBtnText">创建会话</span>
+                        </button>
                         <button class="btn btn-outline-light btn-sm delete-room-btn"
                                 data-room-id="{{ room.id }}"
                                 data-room-name="{{ room.memory_id }}">
@@ -108,7 +108,7 @@
                         </div>
                     </div>
 
-                    <div class="card-body" style="cursor: pointer;" onclick="location.href='{{ url_for('session.session_detail', session_id=session['id']) }}'">
+                    <div class="card-body session-card-body" style="cursor: pointer;" data-session-id="{{ session['id'] }}" onclick="navigateToSession(this)">
                         <div class="mb-2">
                             <strong>会话ID:</strong>
                             <code class="text-info">{{ session['id'][:8] }}...</code>
@@ -128,7 +128,7 @@
                         </div>
                     </div>
 
-                    <div class="card-footer bg-transparent" style="cursor: pointer;" onclick="location.href='{{ url_for('session.session_detail', session_id=session['id']) }}'">
+                    <div class="card-footer bg-transparent session-card-footer" style="cursor: pointer;" data-session-id="{{ session['id'] }}" onclick="navigateToSession(this)">
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
                                 <i class="fas fa-clock me-1"></i>
@@ -152,10 +152,10 @@
                 <p class="text-muted">点击上方按钮创建第一个面试会话</p>
             </div>
             
-            <a href="{{ url_for('session.create_session', room_id=room.id) }}" class="btn btn-primary btn-lg">
+            <button type="button" class="btn btn-primary btn-lg" onclick="createSession()">
                 <i class="fas fa-plus me-2"></i>
                 创建面试会话
-            </a>
+            </button>
         </div>
         {% endif %}
     </div>
@@ -265,10 +265,83 @@
 <script>
 const ROOM_ID = '{{ room.id }}';
 
-// 页面加载时检查简历状态
-document.addEventListener('DOMContentLoaded', async function() {
-    await checkResumeStatus();
-});
+// 创建面试会话
+async function createSession() {
+    const createSessionBtn = document.getElementById('createSessionBtn');
+    const btnText = document.getElementById('createSessionBtnText');
+
+    // 检查是否已禁用
+    if (createSessionBtn.classList.contains('disabled') || createSessionBtn.disabled) {
+        alert('请先上传简历后再创建面试会话！');
+        return;
+    }
+
+    // 显示加载状态
+    const icon = createSessionBtn.querySelector('i');
+    const originalIcon = icon ? icon.className : '';
+    const originalText = btnText ? btnText.textContent : '创建会话';
+
+    createSessionBtn.disabled = true;
+    if (icon) {
+        icon.className = 'fas fa-spinner fa-spin me-1';
+    }
+    if (btnText) {
+        btnText.textContent = '创建中...';
+    }
+
+    try {
+        // 重定向到创建会话的URL
+        window.location.href = `/create_session/${ROOM_ID}`;
+    } catch (error) {
+        // 恢复按钮状态
+        console.error('创建会话失败:', error);
+        createSessionBtn.disabled = false;
+        if (icon) {
+            icon.className = originalIcon;
+        }
+        if (btnText) {
+            btnText.textContent = originalText;
+        }
+        alert('创建会话失败，请重试');
+    }
+}
+
+// 导航到会话详情页
+function navigateToSession(element) {
+    const sessionId = element.dataset.sessionId;
+    if (!sessionId) return;
+
+    // 添加加载样式
+    const card = element.closest('.session-card');
+    if (card) {
+        // 禁用所有可点击元素
+        card.querySelectorAll('[onclick]').forEach(el => {
+            el.style.pointerEvents = 'none';
+        });
+
+        // 添加半透明遮罩和加载动画
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border-radius: 0.375rem;
+        `;
+        overlay.innerHTML = '<i class="fas fa-spinner fa-spin fa-2x text-primary"></i>';
+        card.style.position = 'relative';
+        card.appendChild(overlay);
+    }
+
+    // 导航到会话详情页
+    window.location.href = `/session/${sessionId}`;
+}
 
 // 检查简历状态
 async function checkResumeStatus() {
@@ -325,99 +398,6 @@ async function checkResumeStatus() {
     }
 }
 
-// 上传简历
-document.getElementById('uploadResumeBtn').addEventListener('click', async function() {
-    const fileInput = document.getElementById('resumeFile');
-    const uploadProgress = document.getElementById('uploadProgress');
-    const uploadSuccess = document.getElementById('uploadSuccess');
-    const uploadError = document.getElementById('uploadError');
-    const uploadBtn = this;
-
-    // 验证文件
-    if (!fileInput.files || !fileInput.files[0]) {
-        uploadError.querySelector('#errorMessage').textContent = '请选择PDF文件';
-        uploadError.style.display = 'block';
-        return;
-    }
-
-    const file = fileInput.files[0];
-
-    // 验证文件类型
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
-        uploadError.querySelector('#errorMessage').textContent = '只支持PDF格式文件';
-        uploadError.style.display = 'block';
-        return;
-    }
-
-    // 验证文件大小（200MB）
-    if (file.size > 200 * 1024 * 1024) {
-        uploadError.querySelector('#errorMessage').textContent = '文件大小超过200MB限制';
-        uploadError.style.display = 'block';
-        return;
-    }
-
-    // 重置提示
-    uploadSuccess.style.display = 'none';
-    uploadError.style.display = 'none';
-
-    // 显示进度
-    uploadProgress.style.display = 'block';
-    uploadBtn.disabled = true;
-    fileInput.disabled = true;
-
-    try {
-        // 创建FormData
-        const formData = new FormData();
-        formData.append('resume', file);
-
-        // 上传文件
-        const response = await fetch(`/upload_resume/${ROOM_ID}`, {
-            method: 'POST',
-            body: formData
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            // 上传成功
-            uploadProgress.style.display = 'none';
-            uploadSuccess.querySelector('#successMessage').textContent = result.message || '简历上传成功！';
-            uploadSuccess.style.display = 'block';
-
-            // 2秒后关闭模态框并刷新简历状态
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('uploadResumeModal'));
-                modal.hide();
-                checkResumeStatus();
-            }, 2000);
-        } else {
-            // 上传失败
-            uploadProgress.style.display = 'none';
-            uploadError.querySelector('#errorMessage').textContent = result.error || '上传失败';
-            uploadError.style.display = 'block';
-            uploadBtn.disabled = false;
-            fileInput.disabled = false;
-        }
-    } catch (error) {
-        // 网络错误
-        uploadProgress.style.display = 'none';
-        uploadError.querySelector('#errorMessage').textContent = '网络错误: ' + error.message;
-        uploadError.style.display = 'block';
-        uploadBtn.disabled = false;
-        fileInput.disabled = false;
-    }
-});
-
-// 重置表单
-document.getElementById('uploadResumeModal').addEventListener('hidden.bs.modal', function() {
-    document.getElementById('uploadResumeForm').reset();
-    document.getElementById('uploadProgress').style.display = 'none';
-    document.getElementById('uploadSuccess').style.display = 'none';
-    document.getElementById('uploadError').style.display = 'none';
-    document.getElementById('uploadResumeBtn').disabled = false;
-    document.getElementById('resumeFile').disabled = false;
-});
-
 // 上传 JD
 async function uploadJD() {
     const company = document.getElementById('jdCompanyInput').value.trim();
@@ -467,12 +447,124 @@ async function uploadJD() {
     }
 }
 
-// 阻止未上传简历时创建会话
-document.getElementById('createSessionBtn').addEventListener('click', function(e) {
-    if (this.classList.contains('disabled')) {
-        e.preventDefault();
-        alert('请先上传简历后再创建面试会话！');
-        return false;
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', async function() {
+    // 清理页面加载时可能残留的backdrop
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+
+    // 检查简历状态
+    await checkResumeStatus();
+
+    // 上传简历按钮事件
+    const uploadResumeBtn = document.getElementById('uploadResumeBtn');
+    if (uploadResumeBtn) {
+        uploadResumeBtn.addEventListener('click', async function() {
+            const fileInput = document.getElementById('resumeFile');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const uploadSuccess = document.getElementById('uploadSuccess');
+            const uploadError = document.getElementById('uploadError');
+            const uploadBtn = this;
+
+            // 验证文件
+            if (!fileInput.files || !fileInput.files[0]) {
+                uploadError.querySelector('#errorMessage').textContent = '请选择PDF文件';
+                uploadError.style.display = 'block';
+                return;
+            }
+
+            const file = fileInput.files[0];
+
+            // 验证文件类型
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                uploadError.querySelector('#errorMessage').textContent = '只支持PDF格式文件';
+                uploadError.style.display = 'block';
+                return;
+            }
+
+            // 验证文件大小（200MB）
+            if (file.size > 200 * 1024 * 1024) {
+                uploadError.querySelector('#errorMessage').textContent = '文件大小超过200MB限制';
+                uploadError.style.display = 'block';
+                return;
+            }
+
+            // 重置提示
+            uploadSuccess.style.display = 'none';
+            uploadError.style.display = 'none';
+
+            // 显示进度
+            uploadProgress.style.display = 'block';
+            uploadBtn.disabled = true;
+            fileInput.disabled = true;
+
+            try {
+                // 创建FormData
+                const formData = new FormData();
+                formData.append('resume', file);
+
+                // 上传文件
+                const response = await fetch(`/upload_resume/${ROOM_ID}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // 上传成功
+                    uploadProgress.style.display = 'none';
+                    uploadSuccess.querySelector('#successMessage').textContent = result.message || '简历上传成功！';
+                    uploadSuccess.style.display = 'block';
+
+                    // 2秒后关闭模态框并刷新简历状态
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('uploadResumeModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        checkResumeStatus();
+                    }, 2000);
+                } else {
+                    // 上传失败
+                    uploadProgress.style.display = 'none';
+                    uploadError.querySelector('#errorMessage').textContent = result.error || '上传失败';
+                    uploadError.style.display = 'block';
+                    uploadBtn.disabled = false;
+                    fileInput.disabled = false;
+                }
+            } catch (error) {
+                // 网络错误
+                console.error('[Room] Upload error:', error);
+                uploadProgress.style.display = 'none';
+                uploadError.querySelector('#errorMessage').textContent = '网络错误: ' + error.message;
+                uploadError.style.display = 'block';
+                uploadBtn.disabled = false;
+                fileInput.disabled = false;
+            }
+        });
+    }
+
+    // 重置表单事件
+    const uploadResumeModal = document.getElementById('uploadResumeModal');
+    if (uploadResumeModal) {
+        uploadResumeModal.addEventListener('hidden.bs.modal', function() {
+            const form = document.getElementById('uploadResumeForm');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const uploadSuccess = document.getElementById('uploadSuccess');
+            const uploadError = document.getElementById('uploadError');
+            const uploadBtn = document.getElementById('uploadResumeBtn');
+            const resumeFile = document.getElementById('resumeFile');
+
+            if (form) form.reset();
+            if (uploadProgress) uploadProgress.style.display = 'none';
+            if (uploadSuccess) uploadSuccess.style.display = 'none';
+            if (uploadError) uploadError.style.display = 'none';
+            if (uploadBtn) uploadBtn.disabled = false;
+            if (resumeFile) resumeFile.disabled = false;
+        });
     }
 });
 </script>
