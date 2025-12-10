@@ -1,0 +1,52 @@
+name: '🐛 Bug Report[反馈缺陷]'
+# version V1.1  update on 20251208
+description: 'Report an bug[反馈一个问题/缺陷]'
+title: '[Bug Report] '
+labels: ['bug']
+body:
+  - type: dropdown
+    attributes:
+      label: '📦 Deployment Method[部署方式]'
+      multiple: true
+      options:
+        - 'Automatic deployment[自动部署]'
+        - 'Manual deployment[手动部署]'
+        - 'Scripted deployment[脚本部署]'
+        - 'Other[其它情况]'
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: '📚 Version'
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: '💻 Operating System[操作系统]'
+      multiple: true
+      options:
+        - 'Windows'
+        - 'macOS'
+        - 'Ubuntu'
+        - 'Other Linux'
+        - 'Other'
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '📖 Bug Description[问题描述]'
+      description: A clear and concise description of the bug, if the above option is `Other`, please also explain in detail.[请提供一个清晰且简洁的问题描述。]
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '📷 Recurrence Steps[复现步骤]'
+      description: A clear and concise description of how to recurrence.[请提供一个清晰且简洁的描述，说明如何复现问题。]
+  - type: textarea
+    attributes:
+      label: '🚦 Expected Behavior[期望结果]'
+      description: A clear and concise description of what you expected to happen.[请提供一个清晰且简洁的描述，说明您期望发生什么。]
+  - type: textarea
+    attributes:
+      label: '✍️ Additional Information[补充信息]'
+      description: If your problem needs further explanation, or if the issue you're seeing cannot be reproduced in a gist, please add more information here. [如果您的问题需要进一步说明，或者您遇到的问题无法在一个简单的示例中复现，请在这里添加更多信息。]

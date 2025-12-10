@@ -1,0 +1,16 @@
+name: '🐣 Code Change[代码变更]'
+# version V1.0  update on 20251207
+description: 'Change Description[改动描述]'
+title: '[Code Change] '
+labels: ['change']
+body:
+  - type: textarea
+    attributes:
+      label: '👀 改动描述'
+      description: Please add a clear and concise problem description explaining the reason for the changes.[请添加一个清晰且简洁的问题描述，阐述改动的原因。]
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '📝 Additional Information[补充信息]'
+      description: Add any other context about the change here.[在这里添加关于改动的任何其他补充信息。]
