@@ -1,0 +1,22 @@
+name: '✊🏻 Code Refactor[代码重构]'
+# version V1.0  update on 20251207
+description: 'Background Description[背景描述]'
+title: '[Code Refactor] '
+labels: ['refactor']
+body:
+  - type: textarea
+    attributes:
+      label: '✌️ Background Description[背景描述]'
+      description: Please add a clear and concise description of the the code refactoring.[请清晰且简洁地描述代码重构的背景。]
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '🥂 Potential Benefits[潜在收益]'
+      description: Please clearly and concisely describe the benefits of code refactoring.[请清晰且简洁地描述重构后的好处。]
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '📝 Additional Information[补充信息]'
+      description: Add any other context about the refactor here.[在这里添加关于重构的任何其他补充信息。]
