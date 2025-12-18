@@ -205,12 +205,28 @@ def _load_session_rounds(session):
 
 
 def _load_round_questions(room_id: str, session_id: str, round_index: int):
-    """从MinIO加载轮次问题数据"""
-    questions_data = minio_client.download_json(
-        f"rooms/{room_id}/sessions/{session_id}/questions/round_{round_index}.json"
-    )
+    """从数据库加载轮次问题和答案数据"""
+    from backend.services.interview_service import RoundService
+    from backend.models.models import QuestionAnswer
 
-    if questions_data:
-        return questions_data.get('questions', [])
+    # 获取轮次对象
+    round_obj = RoundService.get_round_by_session_and_index(session_id, round_index)
+    if not round_obj:
+        return []
 
-    return []
+    # 从数据库加载问答记录
+    qa_records = QuestionAnswer.select().where(
+        QuestionAnswer.round == round_obj
+    ).order_by(QuestionAnswer.question_index)
+
+    # 构建问答数据
+    questions_data = []
+    for qa in qa_records:
+        questions_data.append({
+            'question': qa.question_text,
+            'answer': qa.answer_text if qa.is_answered else None,
+            'category': qa.question_category,
+            'is_answered': qa.is_answered
+        })
+
+    return questions_data
