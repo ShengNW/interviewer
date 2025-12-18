@@ -3,7 +3,7 @@
 {% block title %}{{ room.memory_id }} - 面试间详情{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row" style="margin-top: 20px;">
     <div class="col-12">
         <!-- 面包屑导航 -->
         <nav aria-label="breadcrumb" class="mb-4">
@@ -568,4 +568,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 </script>
+
+<style>
+/* 确保 Modal 的 z-index 高于固定导航栏 */
+.modal {
+    z-index: 10000 !important;
+}
+.modal-backdrop {
+    z-index: 9999 !important;
+}
+/* 确保 Modal 对话框不被导航栏遮挡 */
+.modal-dialog {
+    margin-top: 100px !important;
+}
+</style>
 {% endblock %}

@@ -39,10 +39,23 @@ function initializeTooltips() {
 
 // 绑定全局事件
 function bindGlobalEvents() {
-    // 点击卡片跳转
-    $(document).on('click', '.room-card, .session-card', function(e) {
-        // 如果点击的是按钮，不执行跳转
-        if ($(e.target).is('a, button') || $(e.target).parents('a, button').length) {
+    // 点击面试间卡片跳转
+    $(document).on('click', '.room-card', function(e) {
+        // 如果点击的是按钮或按钮内的元素，不执行跳转
+        if ($(e.target).is('button') || $(e.target).closest('button').length) {
+            return;
+        }
+
+        const roomId = $(this).data('room-id');
+        if (roomId) {
+            window.location.href = `/room/${roomId}`;
+        }
+    });
+
+    // 点击会话卡片跳转
+    $(document).on('click', '.session-card', function(e) {
+        // 如果点击的是按钮或按钮内的元素，不执行跳转
+        if ($(e.target).is('button') || $(e.target).closest('button').length) {
             return;
         }
 

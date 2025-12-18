@@ -3,6 +3,7 @@
 负责面试间相关的路由处理
 """
 
+import threading
 from flask import Blueprint, render_template, redirect, url_for, Response, request
 from typing import Union
 from backend.services.interview_service import RoomService, SessionService, RoundService
@@ -85,8 +86,8 @@ def mistakes_list():
 @require_resource_owner('room')
 def room_detail(room_id: str) -> Union[str, tuple[str, int]]:
     """面试间详情页面 - 需要登录且必须是owner"""
-    # 静默ping数字人
-    _ping_digital_human()
+    # 异步ping数字人（不阻塞页面加载）
+    _ping_digital_human_async()
 
     room = RoomService.get_room(room_id)
     if not room:
@@ -129,11 +130,26 @@ def _calculate_system_stats(rooms) -> dict:
 
 
 def _ping_digital_human() -> None:
-    """静默ping数字人服务"""
+    """静默ping数字人服务（同步版本）"""
     try:
         ping_dh()
     except Exception as e:
         logger.warning(f"Failed to ping digital human: {e}")
+
+
+def _ping_digital_human_async() -> None:
+    """异步ping数字人服务（不阻塞主线程）"""
+    def _async_ping():
+        try:
+            ping_dh()
+            logger.info("Digital human ping successful (async)")
+        except Exception as e:
+            logger.warning(f"Failed to ping digital human (async): {e}")
+
+    # 使用守护线程，不阻塞主线程
+    thread = threading.Thread(target=_async_ping, daemon=True)
+    thread.start()
+    logger.debug("Digital human ping started in background")
 
 
 @room_bp.route('/pricing')
