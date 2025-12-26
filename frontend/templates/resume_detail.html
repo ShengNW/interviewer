@@ -1,0 +1,290 @@
+{% extends "base_user.html" %}
+
+{% block title %}简历详情 - 夜莺面试官{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- 返回按钮和标题 -->
+    <div class="row mb-4" style="margin-top: 40px;">
+        <div class="col-12">
+            <a href="{{ url_for('room.resumes_list') }}" class="btn btn-outline-secondary btn-sm mb-3" style="border-radius: 8px;">
+                <i class="fas fa-arrow-left me-2"></i>返回简历列表
+            </a>
+            <h2 class="fw-bold mb-1" style="font-size: 2rem;">
+                <i class="fas fa-file-alt me-3" style="color: var(--accent-blue);"></i>
+                {{ resume.name }}
+            </h2>
+            <p class="text-muted mb-0">
+                <i class="fas fa-clock me-1"></i>
+                创建于 {{ resume.created_at[:19]|replace('T', ' ') }}
+            </p>
+        </div>
+    </div>
+
+    <!-- 简历信息卡片 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2" style="color: var(--accent-blue);"></i>
+                        简历信息
+                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm" id="renameResumeBtn" style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); border: none; padding: 0.375rem 0.75rem; border-radius: 8px;">
+                            <i class="fas fa-edit me-1"></i>重命名
+                        </button>
+                        <button class="btn btn-sm" id="deleteResumeBtn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; padding: 0.375rem 0.75rem; border-radius: 8px;">
+                            <i class="fas fa-trash me-1"></i>删除
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted mb-1" style="font-size: 0.9rem;">文件名</label>
+                            <p class="mb-0 fw-bold">
+                                <i class="fas fa-file-pdf me-2" style="color: #ef4444;"></i>
+                                {{ resume.file_name or '未知' }}
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted mb-1" style="font-size: 0.9rem;">文件大小</label>
+                            <p class="mb-0 fw-bold">
+                                <i class="fas fa-database me-2" style="color: var(--accent-purple);"></i>
+                                {{ (resume.file_size / 1024) | round(2) if resume.file_size else 0 }} KB
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted mb-1" style="font-size: 0.9rem;">关联面试间</label>
+                            <p class="mb-0 fw-bold">
+                                <i class="fas fa-door-open me-2" style="color: var(--accent-blue);"></i>
+                                {{ resume.linked_rooms_count or 0 }} 个
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted mb-1" style="font-size: 0.9rem;">状态</label>
+                            <p class="mb-0 fw-bold">
+                                <i class="fas fa-circle me-2" style="color: var(--accent-green); font-size: 0.6rem;"></i>
+                                激活
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 简历内容 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-text me-2" style="color: var(--accent-green);"></i>
+                        简历内容
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if resume_data and resume_data.get('markdown_content') %}
+                    <div class="resume-content" style="white-space: pre-wrap; font-family: monospace; background: #f8f9fa; padding: 1.5rem; border-radius: 8px; line-height: 1.6;">{{ resume_data.markdown_content }}</div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
+                        <p class="text-muted">简历内容不可用</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结构化数据（如果有） -->
+    {% if resume_data and resume_data.get('structured_data') %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sitemap me-2" style="color: var(--accent-purple);"></i>
+                        结构化数据
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <pre class="mb-0" style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; overflow-x: auto;">{{ resume_data.structured_data | tojson(indent=2) }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #ef4444;"></i>
+                    确认删除
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">确定要删除这份简历吗？此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>取消
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-1"></i>确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 重命名模态框 -->
+<div class="modal fade" id="renameModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2" style="color: var(--accent-blue);"></i>
+                    重命名简历
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="renameForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-file-signature me-1"></i>
+                            新名称 <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="newResumeName" placeholder="请输入新的简历名称" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>取消
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmRenameBtn">
+                    <i class="fas fa-check me-1"></i>确认
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.card-header {
+    background: rgba(102, 126, 234, 0.02);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+}
+
+.resume-content {
+    max-height: 600px;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    const renameModal = new bootstrap.Modal(document.getElementById('renameModal'));
+    const resumeId = '{{ resume.id }}';
+    const resumeName = {{ resume.name | tojson | safe }};
+    const linkedRooms = {{ resume.linked_rooms | tojson | safe }} || [];
+
+    // 重命名按钮点击
+    $('#renameResumeBtn').on('click', function() {
+        $('#newResumeName').val(resumeName);
+        renameModal.show();
+    });
+
+    // 删除按钮点击
+    $('#deleteResumeBtn').on('click', function() {
+        let message = `确定要删除简历"${resumeName}"吗？`;
+        if (linkedRooms && linkedRooms.length > 0) {
+            message += `\n\n⚠️ 警告：该简历关联了 ${linkedRooms.length} 个面试间，删除简历将同时删除以下面试间：\n`;
+            linkedRooms.forEach((room, index) => {
+                message += `${index + 1}. ${room.id}: ${room.name}\n`;
+            });
+        }
+        message += '\n此操作不可恢复。';
+        $('#deleteConfirmModal .modal-body p').html(message.replace(/\n/g, '<br>'));
+        deleteModal.show();
+    });
+
+    // 确认重命名
+    $('#confirmRenameBtn').on('click', function() {
+        const newName = $('#newResumeName').val().trim();
+        if (!newName) {
+            alert('请输入新名称');
+            return;
+        }
+
+        renameModal.hide();
+
+        $.ajax({
+            url: `/api/resumes/${resumeId}`,
+            method: 'PUT',
+            contentType: 'application/json',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            data: JSON.stringify({
+                name: newName
+            }),
+            success: function(response) {
+                if (response.code === 200) {
+                    location.reload();
+                } else {
+                    alert('重命名失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                alert('重命名失败：' + (response?.message || '网络错误'));
+            }
+        });
+    });
+
+    // 确认删除
+    $('#confirmDeleteBtn').on('click', function() {
+        deleteModal.hide();
+
+        $.ajax({
+            url: `/api/resumes/${resumeId}`,
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            success: function(response) {
+                if (response.code === 200) {
+                    window.location.href = '{{ url_for("room.resumes_list") }}';
+                } else {
+                    alert('删除失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                alert('删除失败：' + (response?.message || '网络错误'));
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

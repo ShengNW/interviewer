@@ -15,6 +15,29 @@
     <!-- 自定义样式 -->
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
 
+    <style>
+        /* 确保导航栏z-index不会太高 */
+        .navbar.fixed-top {
+            z-index: 1030 !important;
+        }
+
+        /* 确保模态框始终在导航栏上方 */
+        .modal {
+            z-index: 1060 !important;
+        }
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
+        .modal-dialog {
+            position: relative;
+            z-index: 1061 !important;
+        }
+        .modal-content {
+            position: relative;
+            z-index: 1062 !important;
+        }
+    </style>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body style="padding-top: 70px;">
@@ -34,17 +57,17 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link px-3" href="{{ url_for('room.resumes_list') }}" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
-                            <i class="fas fa-file-alt me-2"></i>我的简历
+                            <i class="fas fa-file-alt me-2"></i>简历管理
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link px-3" href="{{ url_for('room.rooms_list') }}" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
-                            <i class="fas fa-door-open me-2"></i>我的面试间
+                            <i class="fas fa-door-open me-2"></i>面试间管理
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link px-3" href="{{ url_for('room.mistakes_list') }}" style="transition: all 0.3s ease; color: #4a5568; font-weight: 500;">
-                            <i class="fas fa-bookmark me-2"></i>我的错题集
+                            <i class="fas fa-bookmark me-2"></i>错题集管理
                         </a>
                     </li>
                 </ul>

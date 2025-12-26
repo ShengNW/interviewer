@@ -31,26 +31,115 @@ def index():
     rooms = RoomService.get_rooms_by_owner(current_user)
     rooms_dict = [RoomService.to_dict(room) for room in rooms]
 
+    # 获取最近的简历（最多显示2个）
+    from backend.services.resume_service import ResumeService
+    resumes = ResumeService.get_resumes_by_owner(current_user)
+    resumes_dict = [ResumeService.to_dict(resume) for resume in resumes[:2]]
+
     # 计算用户统计数据
     stats = _calculate_system_stats(rooms)
 
     return render_template('index.html',
                          rooms=rooms_dict,
+                         resumes=resumes_dict,
                          stats=stats,
                          current_user=current_user)
 
 
-@room_bp.route('/create_room')
+@room_bp.route('/api/rooms/create', methods=['POST'])
 @require_auth
 def create_room():
-    """创建新的面试间 - 需要登录"""
+    """创建新的面试间 - 需要登录并选择简历"""
+    from backend.common.response import ApiResponse
+    from backend.services.resume_service import ResumeService
+
     # 静默ping数字人
     _ping_digital_human()
 
-    # 获取当前用户并记录为owner
+    # 获取当前用户
     current_user = request.current_user
-    room = RoomService.create_room(owner_address=current_user)
-    return redirect(url_for('room.room_detail', room_id=room.id))
+
+    # 获取请求参数
+    data = request.get_json()
+    resume_id = data.get('resume_id') if data else None
+
+    # 验证简历ID（可选，如果不传则创建不关联简历的面试间）
+    if resume_id:
+        resume = ResumeService.get_resume(resume_id)
+        if not resume:
+            return ApiResponse.not_found("简历")
+
+        # 验证简历所有权
+        if resume.owner_address != current_user:
+            return ApiResponse.forbidden()
+
+    # 创建面试间
+    room = RoomService.create_room(owner_address=current_user, resume_id=resume_id)
+
+    return ApiResponse.success(
+        data={'room_id': room.id},
+        message='面试间创建成功'
+    )
+
+
+@room_bp.route('/api/rooms/<room_id>', methods=['PUT'])
+@require_auth
+@require_resource_owner('room')
+def update_room(room_id: str):
+    """更新面试间信息 - 需要登录且必须是owner"""
+    from backend.common.response import ApiResponse
+
+    # 获取更新数据
+    data = request.get_json()
+    name = data.get('name')
+
+    # 更新面试间
+    success = RoomService.update_room(room_id=room_id, name=name)
+
+    if not success:
+        return ApiResponse.internal_error('更新失败')
+
+    # 返回更新后的面试间
+    updated_room = RoomService.get_room(room_id)
+
+    return ApiResponse.success(
+        data={'room': RoomService.to_dict(updated_room)},
+        message='面试间更新成功'
+    )
+
+
+@room_bp.route('/api/rooms/<room_id>/resume', methods=['PUT'])
+@require_auth
+@require_resource_owner('room')
+def update_room_resume(room_id: str):
+    """更新面试间的简历 - 需要登录且必须是owner"""
+    from backend.common.response import ApiResponse
+    from backend.services.resume_service import ResumeService
+
+    # 获取更新数据
+    data = request.get_json()
+    resume_id = data.get('resume_id')
+
+    if not resume_id:
+        return ApiResponse.bad_request('简历ID不能为空')
+
+    # 验证简历是否存在
+    resume = ResumeService.get_resume(resume_id)
+    if not resume:
+        return ApiResponse.not_found("简历")
+
+    # 验证简历所有权
+    current_user = request.current_user
+    if resume.owner_address != current_user:
+        return ApiResponse.forbidden()
+
+    # 更新面试间的简历
+    success = RoomService.update_room_resume(room_id=room_id, resume_id=resume_id)
+
+    if not success:
+        return ApiResponse.internal_error('更新失败')
+
+    return ApiResponse.success(message='简历更新成功')
 
 
 @room_bp.route('/rooms')
@@ -67,9 +156,45 @@ def rooms_list():
 @room_bp.route('/resumes')
 @require_auth
 def resumes_list():
-    """我的简历列表页面"""
-    # TODO: 后续实现简历管理功能
-    return render_template('resumes.html')
+    """简历列表页面 - 显示用户的所有简历"""
+    from backend.services.resume_service import ResumeService
+
+    current_user = request.current_user
+    resumes = ResumeService.get_resumes_by_owner(current_user)
+    resumes_dict = [ResumeService.to_dict(resume) for resume in resumes]
+
+    # 获取统计信息
+    stats = ResumeService.get_resume_stats(current_user)
+
+    return render_template('resumes.html', resumes=resumes_dict, stats=stats)
+
+
+@room_bp.route('/resumes/<resume_id>')
+@validate_uuid_param('resume_id')
+@require_auth
+def resume_detail(resume_id: str):
+    """简历详情页面 - 查看简历内容"""
+    from backend.services.resume_service import ResumeService
+    from backend.clients.minio_client import download_resume_data
+
+    current_user = request.current_user
+    resume = ResumeService.get_resume(resume_id)
+
+    if not resume:
+        logger.warning(f"Resume not found: {resume_id}")
+        return "简历不存在", 404
+
+    # 检查权限
+    if resume.owner_address != current_user:
+        logger.warning(f"Unauthorized access attempt to resume {resume_id} by {current_user}")
+        return "无权访问此简历", 403
+
+    # 获取简历数据
+    resume_data = download_resume_data(resume_id)
+
+    return render_template('resume_detail.html',
+                         resume=ResumeService.to_dict(resume),
+                         resume_data=resume_data)
 
 
 @room_bp.route('/mistakes')

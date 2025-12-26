@@ -18,59 +18,63 @@
     </div>
 
     <div class="row g-4 mb-5">
-        <!-- 示例简历卡片 -->
+        {% for resume in resumes %}
         <div class="col-lg-4 col-md-6">
-            <div class="card resume-card h-100" style="transition: all 0.3s ease;">
+            <div class="card h-100 resume-card" style="cursor: pointer; transition: all 0.3s ease;" onclick="if(!event.target.closest('button')) window.location.href='/resumes/{{ resume.id }}'">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
-                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
                             <i class="fas fa-file-pdf" style="color: white; font-size: 1.1rem;"></i>
                         </div>
                         <div>
-                            <h6 class="mb-0 fw-bold">前端开发_张三</h6>
-                            <small class="text-muted">2024-01-15</small>
+                            <h6 class="mb-0 fw-bold">{{ resume.name }}</h6>
                         </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm" onclick="renameResume('{{ resume.id }}', '{{ resume.name.replace("'", "\\'") }}'); event.stopPropagation();" style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); border: none; padding: 0.375rem 0.75rem; border-radius: 8px;">
+                            <i class="fas fa-edit me-1"></i>重命名
+                        </button>
+                        <button class="btn btn-sm" data-resume-id="{{ resume.id }}" data-resume-name="{{ resume.name }}" data-linked-rooms="{{ resume.linked_rooms | tojson | forceescape }}" onclick="deleteResumeFromData(this); event.stopPropagation();" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; padding: 0.375rem 0.75rem; border-radius: 8px;">
+                            <i class="fas fa-trash me-1"></i>删除
+                        </button>
                     </div>
                 </div>
                 <div class="card-body">
-                    <span class="badge mb-2" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green); padding: 0.4rem 0.8rem;">
-                        <i class="fas fa-check-circle me-1"></i>已分析
-                    </span>
-                    <div class="row text-center mt-2">
-                        <div class="col-4">
-                            <h6 class="mb-0 fw-bold" style="color: var(--accent-blue);">5</h6>
-                            <small class="text-muted">面试间</small>
-                        </div>
-                        <div class="col-4" style="border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color);">
-                            <h6 class="mb-0 fw-bold" style="color: var(--accent-green);">12</h6>
-                            <small class="text-muted">题目</small>
-                        </div>
-                        <div class="col-4">
-                            <h6 class="mb-0 fw-bold" style="color: var(--accent-purple);">3</h6>
-                            <small class="text-muted">建议</small>
+                    <div class="row text-center">
+                        <div class="col-12">
+                            <div style="padding: 0.75rem 0;">
+                                <h5 class="mb-1" style="color: var(--accent-purple); font-size: 1.75rem; font-weight: 700;">
+                                    {{ resume.linked_rooms_count or 0 }}
+                                </h5>
+                                <small class="text-muted">关联面试间</small>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer d-flex justify-content-between align-items-center">
-                    <small class="text-muted"><i class="fas fa-briefcase me-1"></i>3年经验</small>
-                    <button class="btn btn-sm btn-primary" style="border-radius: 8px;">查看</button>
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        {{ resume.created_at[:19]|replace('T', ' ') }}
+                    </small>
+                    <i class="fas fa-arrow-right" style="color: var(--accent-green);"></i>
                 </div>
             </div>
         </div>
+        {% endfor %}
 
         <!-- 上传新简历卡片 -->
         <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for('room.resumes_list') }}" class="text-decoration-none">
-                <div class="card h-100 create-card" style="cursor: pointer; border: 2px dashed rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.02); transition: all 0.3s ease;">
-                    <div class="card-body d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 220px;">
+            <div class="text-decoration-none" id="uploadNewResumeBtn" style="cursor: pointer;">
+                <div class="card h-100 create-card" style="border: 2px dashed rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.02); transition: all 0.3s ease;">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center text-center">
                         <div style="width: 70px; height: 70px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; transition: all 0.3s ease;">
                             <i class="fas fa-upload" style="font-size: 2rem; color: var(--accent-green);"></i>
                         </div>
                         <h6 class="fw-bold mb-1" style="color: var(--accent-green);">上传新简历</h6>
-                        <small class="text-muted">支持 PDF、Word</small>
+                        <small class="text-muted">支持 PDF</small>
                     </div>
                 </div>
-            </a>
+            </div>
         </div>
     </div>
 
@@ -96,14 +100,18 @@
                         <div style="width: 40px; height: 40px; background: var(--gradient-primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
                             <i class="fas fa-door-open" style="color: white; font-size: 1.1rem;"></i>
                         </div>
-                        <h6 class="mb-0 fw-bold">面试间</h6>
+                        <h6 class="mb-0 fw-bold">{{ room.name }}</h6>
                     </div>
-                    <div class="d-flex align-items-center">
-                        <button class="btn btn-sm delete-room-btn"
-                                data-room-id="{{ room.id }}"
-                                data-room-name="{{ room.memory_id }}"
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm"
+                                onclick="renameRoom('{{ room.id }}', '{{ room.name.replace("'", "\\'") }}'); event.stopPropagation();"
+                                style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); border: none; padding: 0.375rem 0.75rem; border-radius: 8px;">
+                            <i class="fas fa-edit me-1"></i>重命名
+                        </button>
+                        <button class="btn btn-sm"
+                                onclick="deleteRoom('{{ room.id }}', '{{ room.name.replace("'", "\\'") }}'); event.stopPropagation();"
                                 style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; padding: 0.375rem 0.75rem; border-radius: 8px;">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash me-1"></i>删除
                         </button>
                     </div>
                 </div>
@@ -144,7 +152,7 @@
         <div class="col-lg-4 col-md-6">
             <div class="text-decoration-none" id="createRoomBtn" style="cursor: pointer;">
                 <div class="card h-100 create-card" style="border: 2px dashed rgba(102, 126, 234, 0.3); background: rgba(102, 126, 234, 0.02); transition: all 0.3s ease;">
-                    <div class="card-body d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 260px;">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center text-center">
                         <div style="width: 70px; height: 70px; background: rgba(102, 126, 234, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; transition: all 0.3s ease;">
                             <i class="fas fa-plus" style="font-size: 2rem; color: var(--accent-blue);"></i>
                         </div>
@@ -282,6 +290,253 @@
     </div>
 </div>
 
+<!-- 选择简历模态框 -->
+<div class="modal fade" id="selectResumeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">选择简历创建面试间</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">请选择一份简历来创建面试间，AI 将根据简历内容生成面试题</p>
+                <div id="resumeSelectList">
+                    <!-- 简历列表将由JavaScript动态生成 -->
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 p-3" style="background: rgba(102, 126, 234, 0.05); border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.1);">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle me-2" style="color: var(--accent-blue);"></i>
+                        <small class="text-muted mb-0">没有简历？<a href="{{ url_for('room.resumes_list') }}" class="text-primary">点击上传简历</a></small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除面试间确认模态框 -->
+<div class="modal fade" id="deleteRoomModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #ef4444;"></i>
+                    确认删除
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0" id="deleteRoomText">确定要删除这个面试间吗？此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>取消
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteRoomBtn">
+                    <i class="fas fa-trash me-1"></i>确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 重命名面试间模态框 -->
+<div class="modal fade" id="renameRoomModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2" style="color: var(--accent-blue);"></i>
+                    重命名面试间
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="renameRoomForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-door-open me-1"></i>
+                            新名称 <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="newRoomName" placeholder="请输入新的面试间名称" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>取消
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmRenameRoomBtn">
+                    <i class="fas fa-check me-1"></i>确认
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 上传简历模态框 -->
+<div class="modal fade" id="uploadResumeModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload me-2" style="color: var(--accent-blue);"></i>
+                    上传简历
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" id="closeModalBtn"></button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadResumeForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-file-signature me-1"></i>
+                            简历名称 <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="resumeName" placeholder="例如：前端开发_张三" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-file-pdf me-1"></i>
+                            已选择文件
+                        </label>
+                        <p class="text-muted mb-0" id="selectedFileName">
+                            <i class="fas fa-check-circle text-success me-1"></i>
+                            <span>无</span>
+                        </p>
+                    </div>
+                    <div class="alert alert-info mb-0" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 8px;">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>上传后将自动进行 PDF 解析和 OCR 识别，可能需要 30-60 秒，请耐心等待</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelUploadBtn">
+                    <i class="fas fa-times me-1"></i>取消
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmUploadBtn">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>开始上传
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 上传进度模态框 -->
+<div class="modal fade" id="uploadProgressModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-5">
+                <div class="mb-4">
+                    <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <h5 class="fw-bold mb-3" id="uploadStatusTitle">正在上传简历...</h5>
+                <p class="text-muted mb-4" id="uploadStatusText">正在上传文件到服务器</p>
+
+                <!-- 进度步骤 -->
+                <div class="progress-steps text-start" style="max-width: 400px; margin: 0 auto;">
+                    <div class="step mb-3 pb-3" style="border-bottom: 1px solid #e2e8f0;" id="step-upload">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>
+                            <span>上传文件</span>
+                        </div>
+                    </div>
+                    <div class="step mb-3 pb-3" style="border-bottom: 1px solid #e2e8f0; opacity: 0.5;" id="step-parse">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>
+                            <span>解析 PDF 文档</span>
+                        </div>
+                    </div>
+                    <div class="step" style="opacity: 0.5;" id="step-ocr">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>
+                            <span>OCR 识别内容</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-muted mt-4 mb-0" style="font-size: 0.875rem;">
+                    <i class="fas fa-clock me-1"></i>
+                    预计需要 30-60 秒，请勿关闭页面
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 隐藏的文件上传input -->
+<input type="file" id="resumeFileInput" accept=".pdf" style="display: none;">
+
+<!-- 删除简历确认模态框 -->
+<div class="modal fade" id="deleteResumeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #ef4444;"></i>
+                    确认删除
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0" id="deleteResumeText">确定要删除这份简历吗？此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>取消
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteResumeBtn">
+                    <i class="fas fa-trash me-1"></i>确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 重命名简历模态框 -->
+<div class="modal fade" id="renameResumeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2" style="color: var(--accent-blue);"></i>
+                    重命名简历
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="renameResumeForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-file-signature me-1"></i>
+                            新名称 <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="newResumeName" placeholder="请输入新的简历名称" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>取消
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmRenameResumeBtn">
+                    <i class="fas fa-check me-1"></i>确认
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 创建面试间 Loading 遮罩层 -->
 <div id="createRoomLoading" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; backdrop-filter: blur(5px);">
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; background: white; padding: 3rem 4rem; border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); min-width: 400px;">
@@ -316,6 +571,31 @@
 </div>
 
 <style>
+/* 统一卡片高度 */
+.resume-card,
+.room-card,
+.create-card {
+    min-height: 280px;
+}
+
+/* 简历卡片样式和左侧装饰线 */
+.resume-card {
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent-green);
+    border-radius: 12px;
+}
+
+/* 面试间卡片样式和左侧装饰线 */
+.room-card {
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent-blue);
+    border-radius: 12px;
+}
+
 .create-card:hover {
     border-color: currentColor !important;
     transform: translateY(-4px);
@@ -332,13 +612,388 @@
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
+
+.modal-dialog {
+    margin-top: 100px !important;
+}
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// 全局变量
+let roomToDelete = null;
+let roomToRename = null;
+let resumeToDelete = null;
+let resumeToRename = null;
+let deleteRoomModal, renameRoomModal, deleteResumeModal, renameResumeModal;
+
 $(document).ready(function() {
+    const selectResumeModal = new bootstrap.Modal(document.getElementById('selectResumeModal'));
+    deleteRoomModal = new bootstrap.Modal(document.getElementById('deleteRoomModal'));
+    renameRoomModal = new bootstrap.Modal(document.getElementById('renameRoomModal'));
+    deleteResumeModal = new bootstrap.Modal(document.getElementById('deleteResumeModal'));
+    renameResumeModal = new bootstrap.Modal(document.getElementById('renameResumeModal'));
+    const uploadModal = new bootstrap.Modal(document.getElementById('uploadResumeModal'));
+    const progressModal = new bootstrap.Modal(document.getElementById('uploadProgressModal'));
+
+    let selectedFile = null;
+
+    // 点击上传新简历按钮
+    $('#uploadNewResumeBtn').on('click', function() {
+        document.getElementById('resumeFileInput').click();
+    });
+
+    // 文件选择
+    $('#resumeFileInput').on('change', function(e) {
+        const file = e.target.files[0];
+        console.log('File selected:', file);
+        if (file) {
+            // 验证文件类型
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                showToast('warning', '只支持 PDF 格式的简历文件');
+                this.value = '';
+                return;
+            }
+
+            // 验证文件大小（限制10MB）
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('warning', '文件大小不能超过 10MB');
+                this.value = '';
+                return;
+            }
+
+            selectedFile = file;
+            $('#selectedFileName span').text(file.name);
+            $('#resumeName').val(file.name.replace('.pdf', ''));
+
+            // 显示上传对话框
+            console.log('Showing upload modal...');
+            uploadModal.show();
+        }
+        // 重置input，允许重新选择同一文件
+        this.value = '';
+    });
+
+    // 确认上传
+    $('#confirmUploadBtn').on('click', function() {
+        if (!selectedFile) {
+            alert('请选择文件');
+            return;
+        }
+
+        const name = $('#resumeName').val().trim();
+        if (!name) {
+            alert('请输入简历名称');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('resume', selectedFile);
+        formData.append('name', name);
+
+        uploadResume(formData);
+    });
+
+    // 上传简历
+    function uploadResume(formData) {
+        // 隐藏上传对话框
+        uploadModal.hide();
+
+        // 显示进度对话框
+        progressModal.show();
+
+        // 重置进度步骤
+        resetProgressSteps();
+
+        // 模拟进度更新（因为后端是同步的，我们模拟进度显示）
+        let progressTimer = null;
+        let currentStep = 0;
+
+        progressTimer = setInterval(function() {
+            currentStep++;
+            if (currentStep === 1) {
+                updateProgress('step-parse', '解析 PDF 文档中...');
+            } else if (currentStep === 2) {
+                updateProgress('step-ocr', 'OCR 识别内容中...');
+            }
+        }, 8000);
+
+        $.ajax({
+            url: '/api/resumes/upload',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            success: function(response) {
+                clearInterval(progressTimer);
+
+                if (response.code === 200) {
+                    // 显示成功状态
+                    showSuccess();
+
+                    setTimeout(function() {
+                        progressModal.hide();
+                        // 显示成功提示
+                        showSuccessToast('简历上传成功!');
+                        // 刷新页面
+                        setTimeout(() => location.reload(), 1000);
+                    }, 2000);
+                } else {
+                    clearInterval(progressTimer);
+                    progressModal.hide();
+                    showErrorToast(response.message || '未知错误');
+                }
+            },
+            error: function(xhr) {
+                clearInterval(progressTimer);
+                progressModal.hide();
+
+                const response = xhr.responseJSON;
+                let errorMsg = '网络错误';
+
+                if (response && response.message) {
+                    errorMsg = response.message;
+
+                    // 如果是重名错误,提供重新输入名称的机会
+                    if (errorMsg.includes('已存在') || errorMsg.includes('重复')) {
+                        showErrorWithRetry(errorMsg, function() {
+                            // 重新打开上传对话框让用户修改名称
+                            $('#resumeName').focus().select();
+                            uploadModal.show();
+                        });
+                        return;
+                    }
+                }
+
+                showErrorToast(errorMsg);
+                console.error('Upload error:', xhr);
+            }
+        });
+    }
+
+    // 重置进度步骤
+    function resetProgressSteps() {
+        $('#step-upload').css('opacity', '1').find('.spinner-grow').show();
+        $('#step-parse').css('opacity', '0.5').find('.spinner-grow').show();
+        $('#step-ocr').css('opacity', '0.5').find('.spinner-grow').show();
+
+        $('#uploadStatusTitle').text('正在上传简历...');
+        $('#uploadStatusText').text('正在上传文件到服务器');
+    }
+
+    // 更新进度
+    function updateProgress(stepId, statusText) {
+        // 完成上一步
+        const prevSteps = {
+            'step-parse': 'step-upload',
+            'step-ocr': 'step-parse'
+        };
+
+        if (prevSteps[stepId]) {
+            const prevStep = $('#' + prevSteps[stepId]);
+            prevStep.find('.spinner-grow').replaceWith('<i class="fas fa-check-circle text-success me-3"></i>');
+        }
+
+        // 激活当前步骤
+        $('#' + stepId).css('opacity', '1');
+        $('#uploadStatusText').text(statusText);
+    }
+
+    // 显示成功状态
+    function showSuccess() {
+        $('#step-ocr').find('.spinner-grow').replaceWith('<i class="fas fa-check-circle text-success me-3"></i>');
+        $('#uploadStatusTitle').html('<i class="fas fa-check-circle text-success me-2"></i>上传成功！');
+        $('#uploadStatusText').text('简历已成功上传并识别完成');
+
+        // 所有步骤显示完成
+        $('.step').css('opacity', '1');
+        $('.step .spinner-grow').replaceWith('<i class="fas fa-check-circle text-success me-3"></i>');
+    }
+
+    function showToast(type, message) {
+        // 简单的toast实现
+        alert(message);
+    }
+
+    // 显示错误提示框(带样式)
+    function showErrorToast(message) {
+        const toast = $(`
+            <div class="alert alert-danger alert-dismissible fade show" role="alert"
+                 style="position: fixed; top: 80px; right: 20px; z-index: 10000; min-width: 300px; max-width: 500px;
+                        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); border-left: 4px solid #ef4444; border-radius: 8px;">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-exclamation-circle me-2" style="color: #ef4444; font-size: 1.2rem; margin-top: 2px;"></i>
+                    <div class="flex-grow-1">
+                        <strong>上传失败</strong>
+                        <p class="mb-0 mt-1" style="font-size: 0.9rem;">${message}</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        `);
+
+        $('body').append(toast);
+
+        // 5秒后自动关闭
+        setTimeout(function() {
+            toast.alert('close');
+        }, 5000);
+    }
+
+    // 显示成功提示框(带样式)
+    function showSuccessToast(message) {
+        const toast = $(`
+            <div class="alert alert-success alert-dismissible fade show" role="alert"
+                 style="position: fixed; top: 80px; right: 20px; z-index: 10000; min-width: 300px; max-width: 500px;
+                        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); border-left: 4px solid #10b981; border-radius: 8px;">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-check-circle me-2" style="color: #10b981; font-size: 1.2rem; margin-top: 2px;"></i>
+                    <div class="flex-grow-1">
+                        <strong>成功</strong>
+                        <p class="mb-0 mt-1" style="font-size: 0.9rem;">${message}</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        `);
+
+        $('body').append(toast);
+
+        // 3秒后自动关闭
+        setTimeout(function() {
+            toast.alert('close');
+        }, 3000);
+    }
+
+    // 显示错误提示并提供重试选项
+    function showErrorWithRetry(message, retryCallback) {
+        const modal = $(`
+            <div class="modal fade" id="errorRetryModal" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0">
+                            <h5 class="modal-title">
+                                <i class="fas fa-exclamation-triangle me-2" style="color: #f59e0b;"></i>
+                                名称冲突
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning mb-3" style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2);">
+                                <i class="fas fa-info-circle me-2"></i>
+                                ${message}
+                            </div>
+                            <p class="mb-0 text-muted">请使用其他名称重新上传</p>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>取消
+                            </button>
+                            <button type="button" class="btn btn-primary" id="retryUploadBtn">
+                                <i class="fas fa-edit me-1"></i>修改名称
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+
+        $('body').append(modal);
+        const modalInstance = new bootstrap.Modal(document.getElementById('errorRetryModal'));
+        modalInstance.show();
+
+        // 绑定重试按钮
+        $('#retryUploadBtn').on('click', function() {
+            modalInstance.hide();
+            $('#errorRetryModal').on('hidden.bs.modal', function() {
+                $(this).remove();
+                if (retryCallback) retryCallback();
+            });
+        });
+
+        // 模态框关闭后移除
+        $('#errorRetryModal').on('hidden.bs.modal', function() {
+            $(this).remove();
+        });
+    }
+
+    // 点击创建面试间按钮
     $('#createRoomBtn').on('click', function() {
+        // 先加载简历列表
+        loadResumesForSelection();
+        // 显示选择简历对话框
+        selectResumeModal.show();
+    });
+
+    // 加载简历列表供选择
+    function loadResumesForSelection() {
+        $.ajax({
+            url: '/api/resumes',
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            success: function(response) {
+                if (response.code === 200) {
+                    renderResumeSelectList(response.data.resumes);
+                }
+            },
+            error: function(xhr) {
+                $('#resumeSelectList').html('<p class="text-danger text-center">加载简历失败</p>');
+            }
+        });
+    }
+
+    // 渲染简历选择列表
+    function renderResumeSelectList(resumes) {
+        const container = $('#resumeSelectList');
+
+        if (resumes.length === 0) {
+            container.html(`
+                <div class="text-center py-4">
+                    <i class="fas fa-file-alt fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
+                    <p class="text-muted">还没有简历</p>
+                    <a href="{{ url_for('room.resumes_list') }}" class="btn btn-primary btn-sm">去上传简历</a>
+                </div>
+            `);
+            return;
+        }
+
+        let html = '<div class="list-group">';
+        resumes.forEach(function(resume) {
+            html += `
+                <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center resume-select-item" data-resume-id="${resume.id}">
+                    <div>
+                        <h6 class="mb-1 fw-bold">${resume.name}</h6>
+                        <small class="text-muted">
+                            ${resume.company ? `<i class="fas fa-building me-1"></i>${resume.company} ` : ''}
+                            ${resume.position ? `<i class="fas fa-briefcase me-1"></i>${resume.position}` : ''}
+                        </small>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: var(--accent-blue);"></i>
+                </button>
+            `;
+        });
+        html += '</div>';
+
+        container.html(html);
+
+        // 绑定点击事件
+        $('.resume-select-item').on('click', function() {
+            const resumeId = $(this).data('resume-id');
+            createRoomWithResume(resumeId);
+        });
+    }
+
+    // 使用选中的简历创建面试间
+    function createRoomWithResume(resumeId) {
+        // 隐藏选择对话框
+        selectResumeModal.hide();
+
         // 显示 loading 遮罩
         $('#createRoomLoading').fadeIn(300);
 
@@ -357,10 +1012,231 @@ $(document).ready(function() {
             $('#step3').css('opacity', '1');
         }, 5000);
 
-        // 跳转到创建面试间接口
-        window.location.href = "{{ url_for('room.create_room') }}";
+        // 发送创建请求
+        $.ajax({
+            url: '/api/rooms/create',
+            method: 'POST',
+            contentType: 'application/json',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            data: JSON.stringify({
+                resume_id: resumeId
+            }),
+            success: function(response) {
+                if (response.code === 200) {
+                    // 创建成功，跳转到面试间详情页
+                    window.location.href = `/room/${response.data.room_id}`;
+                } else {
+                    $('#createRoomLoading').hide();
+                    alert('创建失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                $('#createRoomLoading').hide();
+                const response = xhr.responseJSON;
+                alert('创建失败：' + (response?.message || '网络错误'));
+            }
+        });
+    }
+
+    // 房间卡片点击事件
+    $('.room-card').on('click', function(e) {
+        const roomId = $(this).data('room-id');
+        // 不处理按钮的点击
+        if (!$(e.target).closest('button').length) {
+            window.location.href = `/room/${roomId}`;
+        }
+    });
+
+    // 确认删除按钮点击事件
+    $('#confirmDeleteRoomBtn').on('click', function() {
+        if (!roomToDelete) {
+            return;
+        }
+
+        deleteRoomModal.hide();
+
+        $.ajax({
+            url: `/api/rooms/${roomToDelete}`,
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            success: function(response) {
+                if (response.code === 200) {
+                    location.reload();
+                } else {
+                    alert('删除失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                alert('删除失败：' + (response?.message || '网络错误'));
+            }
+        });
+    });
+
+    // 确认重命名按钮点击事件
+    $('#confirmRenameRoomBtn').on('click', function() {
+        if (!roomToRename) {
+            return;
+        }
+
+        const newName = $('#newRoomName').val().trim();
+        if (!newName) {
+            alert('请输入新名称');
+            return;
+        }
+
+        renameRoomModal.hide();
+
+        $.ajax({
+            url: `/api/rooms/${roomToRename}`,
+            method: 'PUT',
+            contentType: 'application/json',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            data: JSON.stringify({
+                name: newName
+            }),
+            success: function(response) {
+                if (response.code === 200) {
+                    location.reload();
+                } else {
+                    alert('重命名失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                alert('重命名失败：' + (response?.message || '网络错误'));
+            }
+        });
+    });
+
+    // 确认删除简历按钮点击事件
+    $('#confirmDeleteResumeBtn').on('click', function() {
+        if (!resumeToDelete) {
+            return;
+        }
+
+        deleteResumeModal.hide();
+
+        $.ajax({
+            url: `/api/resumes/${resumeToDelete}`,
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            success: function(response) {
+                if (response.code === 200) {
+                    location.reload();
+                } else {
+                    alert('删除失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                alert('删除失败：' + (response?.message || '网络错误'));
+            }
+        });
+    });
+
+    // 确认重命名简历按钮点击事件
+    $('#confirmRenameResumeBtn').on('click', function() {
+        if (!resumeToRename) {
+            return;
+        }
+
+        const newName = $('#newResumeName').val().trim();
+        if (!newName) {
+            alert('请输入新名称');
+            return;
+        }
+
+        renameResumeModal.hide();
+
+        $.ajax({
+            url: `/api/resumes/${resumeToRename}`,
+            method: 'PUT',
+            contentType: 'application/json',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            data: JSON.stringify({
+                name: newName
+            }),
+            success: function(response) {
+                if (response.code === 200) {
+                    location.reload();
+                } else {
+                    alert('重命名失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                alert('重命名失败：' + (response?.message || '网络错误'));
+            }
+        });
     });
 });
+
+// 全局函数：删除面试间
+window.deleteRoom = function(roomId, roomName) {
+    roomToDelete = roomId;
+    $('#deleteRoomText').text(`确定要删除面试间 "${roomName}" 吗？此操作不可恢复。`);
+    deleteRoomModal.show();
+};
+
+// 全局函数：重命名面试间
+window.renameRoom = function(roomId, currentName) {
+    roomToRename = roomId;
+    $('#newRoomName').val(currentName);
+    renameRoomModal.show();
+};
+
+// 全局函数：从按钮data属性读取数据并删除简历
+window.deleteResumeFromData = function(button) {
+    const resumeId = $(button).attr('data-resume-id');
+    const resumeName = $(button).attr('data-resume-name');
+    const linkedRoomsStr = $(button).attr('data-linked-rooms');
+    let linkedRooms = [];
+
+    console.log('Delete button clicked:', {resumeId, resumeName, linkedRoomsStr});
+
+    try {
+        if (linkedRoomsStr && linkedRoomsStr !== 'null' && linkedRoomsStr !== '') {
+            linkedRooms = JSON.parse(linkedRoomsStr);
+        }
+    } catch (e) {
+        console.error('Failed to parse linked_rooms:', e, linkedRoomsStr);
+    }
+
+    deleteResume(resumeId, resumeName, linkedRooms);
+};
+
+// 全局函数：删除简历
+window.deleteResume = function(resumeId, resumeName, linkedRooms) {
+    resumeToDelete = resumeId;
+    let message = `确定要删除简历"${resumeName}"吗？`;
+    if (linkedRooms && linkedRooms.length > 0) {
+        message += `\n\n⚠️ 警告：该简历关联了 ${linkedRooms.length} 个面试间，删除简历将同时删除以下面试间：\n`;
+        linkedRooms.forEach((room, index) => {
+            message += `${index + 1}. ${room.id}: ${room.name}\n`;
+        });
+    }
+    message += '\n此操作不可恢复。';
+    $('#deleteResumeText').html(message.replace(/\n/g, '<br>'));
+    deleteResumeModal.show();
+};
+
+// 全局函数：重命名简历
+window.renameResume = function(resumeId, currentName) {
+    resumeToRename = resumeId;
+    $('#newResumeName').val(currentName);
+    renameResumeModal.show();
+};
 
 // 修复浏览器后退按钮导致 loading 遮罩卡住的问题
 window.addEventListener('pageshow', function(event) {

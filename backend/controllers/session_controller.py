@@ -26,16 +26,39 @@ PLACEHOLDER_HOSTS = {"your_public_host_here", "your-public-host"}
 @require_resource_owner('room')
 def create_session(room_id):
     """在指定面试间创建新的面试会话 - 需要登录且必须是room的owner"""
-    # 检查简历是否已上传
-    resume_data = download_resume_data(room_id)
-    if not resume_data:
-        logger.warning(f"Resume not found for room: {room_id}")
+    # 获取面试间信息
+    from backend.services.interview_service import RoomService
+    room = RoomService.get_room(room_id)
+    if not room:
+        logger.warning(f"Room not found: {room_id}")
+        return "面试间不存在", 404
+
+    # 检查面试间是否关联了简历
+    if not room.resume_id:
+        logger.warning(f"No resume linked to room: {room_id}")
         return """
         <html>
         <head>
             <meta charset=\"UTF-8\">
             <script>
-                alert('请先上传简历后再创建面试会话！');
+                alert('请先为面试间关联简历后再创建面试会话！');
+                window.history.back();
+            </script>
+        </head>
+        <body></body>
+        </html>
+        """, 400
+
+    # 检查简历数据是否已上传到MinIO
+    resume_data = download_resume_data(room.resume_id)
+    if not resume_data:
+        logger.warning(f"Resume data not found in MinIO for resume: {room.resume_id}")
+        return """
+        <html>
+        <head>
+            <meta charset=\"UTF-8\">
+            <script>
+                alert('简历数据未找到，请重新上传简历！');
                 window.history.back();
             </script>
         </head>
@@ -65,8 +88,10 @@ def session_detail(session_id):
     # 数字人和轮次数据将通过前端异步加载
 
     # 获取简历数据（从session关联的room获取）
-    room_id = session.room.id
-    resume_data = download_resume_data(room_id)
+    room = session.room
+    resume_data = None
+    if room.resume_id:
+        resume_data = download_resume_data(room.resume_id)
 
     # 检查是否有自定义 JD
     has_custom_jd = bool(session.room.jd_id)

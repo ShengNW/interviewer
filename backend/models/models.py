@@ -37,6 +37,21 @@ class BaseModel(Model):
         return super().save(*args, **kwargs)
 
 
+class Resume(BaseModel):
+    """简历模型 - 独立于面试间"""
+    id = CharField(primary_key=True)
+    name = CharField()  # 简历名称
+    owner_address = CharField(max_length=64)  # 钱包地址
+    file_name = CharField(null=True)  # 原始文件名
+    file_size = IntegerField(null=True)  # 文件大小（字节）
+    company = CharField(null=True)  # 目标公司
+    position = CharField(null=True)  # 目标职位
+    status = CharField(default='active')  # active, deleted
+
+    class Meta:
+        table_name = 'resumes'
+
+
 class Room(BaseModel):
     """面试间模型"""
     id = CharField(primary_key=True)
@@ -44,6 +59,7 @@ class Room(BaseModel):
     name = CharField(default="面试间")
     jd_id = CharField(null=True)  # 上传的 JD ID（可选）
     owner_address = CharField(max_length=64, null=True)  # 钱包地址
+    resume_id = CharField(null=True)  # 关联的简历ID
 
     class Meta:
         table_name = 'rooms'
@@ -111,7 +127,7 @@ def create_tables() -> None:
     if not database.is_closed():
         database.close()
     database.connect()
-    database.create_tables([Room, Session, Round, QuestionAnswer, RoundCompletion], safe=True)
+    database.create_tables([Resume, Room, Session, Round, QuestionAnswer, RoundCompletion], safe=True)
     database.close()
 
 

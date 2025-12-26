@@ -686,15 +686,15 @@ function showReportButtons() {
 
     // 创建报告按钮HTML
     const reportButtonsHTML = `
-        <div class="btn-group btn-group-sm" role="group">
-            <button class="btn btn-outline-primary" onclick="generateRoundReport('${SESSION_ID}', ${roundIndex})" title="生成第${roundIndex + 1}轮报告">
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-light" onclick="generateRoundReport('${SESSION_ID}', ${roundIndex})" title="生成第${roundIndex + 1}轮报告">
                 <i class="fas fa-magic me-1"></i>生成报告
             </button>
-            <button class="btn btn-outline-success" onclick="viewRoundReport('${SESSION_ID}', ${roundIndex})" style="display: none;" id="viewReportBtn_${roundIndex}" title="查看报告">
-                <i class="fas fa-eye"></i>
+            <button class="btn btn-sm btn-light" onclick="viewRoundReport('${SESSION_ID}', ${roundIndex})" style="display: none;" id="viewReportBtn_${roundIndex}" title="查看报告">
+                <i class="fas fa-eye me-1"></i>查看报告
             </button>
-            <button class="btn btn-outline-info" onclick="downloadRoundReport('${SESSION_ID}', ${roundIndex})" style="display: none;" id="downloadReportBtn_${roundIndex}" title="下载PDF">
-                <i class="fas fa-download"></i>
+            <button class="btn btn-sm btn-light" onclick="downloadRoundReport('${SESSION_ID}', ${roundIndex})" style="display: none;" id="downloadReportBtn_${roundIndex}" title="下载PDF">
+                <i class="fas fa-download me-1"></i>下载PDF
             </button>
         </div>
     `;
@@ -714,8 +714,8 @@ function showReportButtons() {
 // 生成轮次报告
 async function generateRoundReport(sessionId, roundIndex) {
     try {
-        // 显示加载状态
-        YeyingInterviewer.showToast('info', '正在生成面试报告，请稍候...');
+        // 显示进度模态框
+        showReportGeneratingModal();
 
         const response = await fetch(`/api/generate_report/${sessionId}/${roundIndex}`, {
             method: 'POST',
@@ -723,6 +723,9 @@ async function generateRoundReport(sessionId, roundIndex) {
         });
 
         const data = await response.json();
+
+        // 隐藏进度模态框
+        hideReportGeneratingModal();
 
         if (data.success) {
             YeyingInterviewer.showToast('success', '面试报告生成成功！');
@@ -742,9 +745,131 @@ async function generateRoundReport(sessionId, roundIndex) {
         }
 
     } catch (error) {
+        hideReportGeneratingModal();
         console.error('生成报告失败:', error);
         YeyingInterviewer.showToast('error', '网络请求失败，请稍后再试');
     }
+}
+
+// 显示报告生成进度模态框
+function showReportGeneratingModal() {
+    const modal = document.getElementById('reportProgressModal');
+    if (!modal) {
+        // 创建模态框
+        const modalHTML = `
+            <div class="modal fade" id="reportProgressModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-body text-center py-5">
+                            <div class="mb-4">
+                                <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold mb-3">正在生成面试报告...</h5>
+                            <p class="text-muted mb-4">AI正在分析您的面试表现，请稍候</p>
+
+                            <!-- 进度步骤 -->
+                            <div class="progress-steps text-start" style="max-width: 400px; margin: 0 auto;">
+                                <div class="step mb-3 pb-3" style="border-bottom: 1px solid #e2e8f0;" id="report-step-analyze">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>
+                                        <span>分析面试问答</span>
+                                    </div>
+                                </div>
+                                <div class="step mb-3 pb-3" style="border-bottom: 1px solid #e2e8f0; opacity: 0.5;" id="report-step-evaluate">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>
+                                        <span>评估回答质量</span>
+                                    </div>
+                                </div>
+                                <div class="step mb-3 pb-3" style="border-bottom: 1px solid #e2e8f0; opacity: 0.5;" id="report-step-generate">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>
+                                        <span>生成评价报告</span>
+                                    </div>
+                                </div>
+                                <div class="step" style="opacity: 0.5;" id="report-step-pdf">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>
+                                        <span>生成PDF文档</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="text-muted mt-4 mb-0" style="font-size: 0.875rem;">
+                                <i class="fas fa-clock me-1"></i>
+                                预计需要 20-40 秒，请勿关闭页面
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // 启动进度动画
+        setTimeout(() => updateReportStep('report-step-evaluate'), 5000);
+        setTimeout(() => updateReportStep('report-step-generate'), 10000);
+        setTimeout(() => updateReportStep('report-step-pdf'), 15000);
+    }
+
+    const modalInstance = new bootstrap.Modal(document.getElementById('reportProgressModal'));
+    modalInstance.show();
+}
+
+// 隐藏报告生成进度模态框
+function hideReportGeneratingModal() {
+    const modal = document.getElementById('reportProgressModal');
+    if (modal) {
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
+        // 重置进度步骤
+        resetReportSteps();
+    }
+}
+
+// 更新报告生成步骤
+function updateReportStep(stepId) {
+    const prevSteps = {
+        'report-step-evaluate': 'report-step-analyze',
+        'report-step-generate': 'report-step-evaluate',
+        'report-step-pdf': 'report-step-generate'
+    };
+
+    if (prevSteps[stepId]) {
+        const prevStep = document.getElementById(prevSteps[stepId]);
+        if (prevStep) {
+            const spinner = prevStep.querySelector('.spinner-grow');
+            if (spinner) {
+                spinner.outerHTML = '<i class="fas fa-check-circle text-success me-3"></i>';
+            }
+        }
+    }
+
+    const currentStep = document.getElementById(stepId);
+    if (currentStep) {
+        currentStep.style.opacity = '1';
+    }
+}
+
+// 重置报告生成步骤
+function resetReportSteps() {
+    setTimeout(() => {
+        const steps = ['report-step-analyze', 'report-step-evaluate', 'report-step-generate', 'report-step-pdf'];
+        steps.forEach((stepId, index) => {
+            const step = document.getElementById(stepId);
+            if (step) {
+                step.style.opacity = index === 0 ? '1' : '0.5';
+                const icon = step.querySelector('i.fa-check-circle');
+                if (icon) {
+                    icon.outerHTML = '<div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>';
+                }
+            }
+        });
+    }, 500);
 }
 
 // 查看轮次报告

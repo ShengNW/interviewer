@@ -205,33 +205,47 @@ class MinIOClient:
 minio_client = MinIOClient()
 
 
-def upload_resume_data(resume_data: Dict[str, Any], room_id: str) -> bool:
+def upload_resume_data(resume_data: Dict[str, Any], resume_id: str) -> bool:
     """
     上传简历数据到MinIO
 
     Args:
         resume_data: 简历数据
-        room_id: 面试间ID
+        resume_id: 简历ID
 
     Returns:
         是否上传成功
     """
-    object_name = f"rooms/{room_id}/resume.json"
+    object_name = f"resumes/{resume_id}/resume.json"
     return minio_client.upload_json(object_name, resume_data)
 
 
-def download_resume_data(room_id: str) -> Optional[Dict[str, Any]]:
+def download_resume_data(resume_id: str) -> Optional[Dict[str, Any]]:
     """
     从MinIO下载简历数据
 
     Args:
-        room_id: 面试间ID
+        resume_id: 简历ID
 
     Returns:
         简历数据，如果不存在返回None
     """
-    object_name = f"rooms/{room_id}/resume.json"
+    object_name = f"resumes/{resume_id}/resume.json"
     return minio_client.download_json(object_name)
+
+
+def delete_resume_data(resume_id: str) -> bool:
+    """
+    从MinIO删除简历数据
+
+    Args:
+        resume_id: 简历ID
+
+    Returns:
+        是否删除成功
+    """
+    object_name = f"resumes/{resume_id}/resume.json"
+    return minio_client.delete_object(object_name)
 
 
 def upload_questions_data(questions_data: Dict[str, Any], room_id: str, session_id: str, round_index: int) -> bool:
