@@ -47,13 +47,20 @@ class QuestionGenerator:
             room_id = session.room.id
             room = session.room
 
-            # 1. 加载简历数据（使用room_id）
+            # 1. 检查面试间是否关联了简历
+            if not room.resume_id:
+                return {
+                    'success': False,
+                    'error': '该面试间还未关联简历，请先关联简历'
+                }
+
+            # 2. 加载简历数据（使用resume_id）
             from backend.clients.minio_client import download_resume_data
-            resume_data = download_resume_data(room_id)
+            resume_data = download_resume_data(room.resume_id)
             if not resume_data:
                 return {
                     'success': False,
-                    'error': '该面试间还未上传简历，请先上传简历'
+                    'error': '简历数据未找到，请重新上传简历'
                 }
 
             # 2. 使用 RAG 生成问题
@@ -62,7 +69,7 @@ class QuestionGenerator:
                     questions_result = self._generate_questions_via_rag(
                         memory_id=room.memory_id,
                         resume_data=resume_data,
-                        room_id=room_id,
+                        resume_id=room.resume_id,  # 传递 resume_id 而不是 room_id
                         jd_id=room.jd_id  # 使用面试间的 JD ID
                     )
                     all_questions = questions_result['questions']
@@ -123,7 +130,7 @@ class QuestionGenerator:
         self,
         memory_id: str,
         resume_data: Dict[str, Any],
-        room_id: str,
+        resume_id: str,
         jd_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
@@ -132,7 +139,7 @@ class QuestionGenerator:
         Args:
             memory_id: 记忆体ID
             resume_data: 简历数据（用于提取 company 和 position）
-            room_id: 面试间ID（用于构造 resume_url）
+            resume_id: 简历ID（用于构造 resume_url）
             jd_id: 面试间上传的 JD ID（可选，优先使用）
 
         Returns:
@@ -140,8 +147,8 @@ class QuestionGenerator:
         """
         rag_client = get_rag_client()
 
-        # 构造简历在 MinIO 中的路径
-        resume_url = f"rooms/{room_id}/resume.json"
+        # 构造简历在 MinIO 中的路径（正确的路径结构）
+        resume_url = f"resumes/{resume_id}/resume.json"
 
         result = rag_client.generate_questions(
             memory_id=memory_id,

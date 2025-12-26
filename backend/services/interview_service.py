@@ -16,12 +16,25 @@ class RoomService:
     """房间管理服务"""
 
     @staticmethod
-    def create_room(name: Optional[str] = None, owner_address: Optional[str] = None) -> Room:
+    def create_room(name: Optional[str] = None, owner_address: Optional[str] = None, resume_id: Optional[str] = None) -> Room:
         """创建新的面试间"""
         from backend.clients.rag.rag_client import get_rag_client
+        from backend.services.resume_service import ResumeService
 
         room_id = str(uuid.uuid4())
-        room_name = name or "面试间"
+
+        # 如果没有提供名字，则根据简历生成默认名字
+        if not name:
+            if resume_id:
+                resume = ResumeService.get_resume(resume_id)
+                if resume:
+                    room_name = f"面试间 {resume.name}"
+                else:
+                    room_name = "面试间"
+            else:
+                room_name = "面试间"
+        else:
+            room_name = name
 
         # 调用 RAG 服务创建记忆体
         try:
@@ -37,9 +50,10 @@ class RoomService:
             id=room_id,
             memory_id=memory_id,
             name=room_name,
-            owner_address=owner_address
+            owner_address=owner_address,
+            resume_id=resume_id
         )
-        logger.info(f"Created room {room_id} for owner {owner_address}")
+        logger.info(f"Created room {room_id} for owner {owner_address} with resume {resume_id}")
         return room
 
     @staticmethod
@@ -73,6 +87,33 @@ class RoomService:
             room.delete_instance()
             return True
         except Room.DoesNotExist:
+            return False
+
+    @staticmethod
+    def update_room(room_id: str, name: Optional[str] = None) -> bool:
+        """更新面试间信息"""
+        try:
+            room = Room.get_by_id(room_id)
+            if name is not None:
+                room.name = name
+            room.save()
+            logger.info(f"Updated room: {room_id}")
+            return True
+        except Room.DoesNotExist:
+            logger.warning(f"Room not found: {room_id}")
+            return False
+
+    @staticmethod
+    def update_room_resume(room_id: str, resume_id: Optional[str] = None) -> bool:
+        """更新面试间的简历"""
+        try:
+            room = Room.get_by_id(room_id)
+            room.resume_id = resume_id
+            room.save()
+            logger.info(f"Updated room resume: {room_id} -> resume: {resume_id}")
+            return True
+        except Room.DoesNotExist:
+            logger.warning(f"Room not found: {room_id}")
             return False
 
     @staticmethod
