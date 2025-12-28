@@ -1,5 +1,6 @@
 name: Build and Push Docker Image on Tag
-# 20251210 - first version
+# 20251217 - first version
+# 20251227 - add linux/arm64 support
 
 on:
   push:
@@ -30,6 +31,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             yeying2025/interviewer:${{ env.VERSION }}
