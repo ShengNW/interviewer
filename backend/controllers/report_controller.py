@@ -55,6 +55,12 @@ def generate_report(session_id, round_index):
         if not pdf_filename:
             return ApiResponse.error('PDF保存失败')
 
+        # 报告生成完成，更新会话状态为 round_completed
+        if session:
+            session.status = 'round_completed'
+            session.save()
+            logger.info(f"Session {session_id} status updated to round_completed for round {round_index}")
+
         return ApiResponse.success(data={
             'evaluation_filename': eval_result['report_filename'],
             'pdf_filename': pdf_filename,
