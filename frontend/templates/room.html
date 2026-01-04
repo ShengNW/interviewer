@@ -114,6 +114,12 @@
                             <code class="text-info">{{ session['id'][:8] }}...</code>
                         </div>
 
+                        <div class="mb-3">
+                            <span class="badge session-status-badge status-{{ session['status'] }}" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
+                                {{ session['status_display'] }}
+                            </span>
+                        </div>
+
                         <div class="row text-center">
                             <div class="col-6">
                                 <div class="border-end">
@@ -553,6 +559,32 @@ document.addEventListener('DOMContentLoaded', async function() {
 /* 确保 Modal 对话框不被导航栏遮挡 */
 .modal-dialog {
     margin-top: 100px !important;
+}
+
+/* 会话状态徽章样式 */
+.session-status-badge {
+    font-weight: 500;
+    border-radius: 4px;
+}
+.session-status-badge.status-initialized {
+    background-color: #6c757d;
+    color: white;
+}
+.session-status-badge.status-generating {
+    background-color: #17a2b8;
+    color: white;
+}
+.session-status-badge.status-interviewing {
+    background-color: #007bff;
+    color: white;
+}
+.session-status-badge.status-analyzing {
+    background-color: #ffc107;
+    color: #212529;
+}
+.session-status-badge.status-round_completed {
+    background-color: #28a745;
+    color: white;
 }
 </style>
 {% endblock %}

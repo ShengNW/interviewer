@@ -32,13 +32,28 @@ def generate_questions(session_id):
         return ApiResponse.not_found("面试会话")
 
     try:
+        # 更新会话状态为 generating，并更新当前轮次
+        session.current_round = session.rounds.count() + 1
+        session.status = 'generating'
+        session.save()
+        logger.info(f"Session {session_id} status updated to generating, round {session.current_round}")
+
         # 生成问题
         from backend.services.question import get_question_generation_service
         service = get_question_generation_service()
         result = service.generate_questions(session_id)
 
         if not result['success']:
+            # 如果生成失败，恢复状态
+            session.current_round -= 1
+            session.status = 'round_completed' if session.current_round > 0 else 'initialized'
+            session.save()
             return ApiResponse.error(result['error'])
+
+        # 更新会话状态为 interviewing
+        session.status = 'interviewing'
+        session.save()
+        logger.info(f"Session {session_id} status updated to interviewing")
 
         # 启动LLM
         _start_llm_server(session_id, session.room.id, result, result.get('round_index', 0))
@@ -46,6 +61,15 @@ def generate_questions(session_id):
 
     except Exception as e:
         logger.error(f"Failed to generate questions: {e}", exc_info=True)
+        # 如果失败，恢复状态
+        try:
+            session = SessionService.get_session(session_id)
+            if session:
+                session.current_round = max(0, session.current_round - 1)
+                session.status = 'round_completed' if session.current_round > 0 else 'initialized'
+                session.save()
+        except Exception as rollback_error:
+            logger.error(f"Failed to rollback session status: {rollback_error}")
         return ApiResponse.internal_error(f'生成面试题失败: {str(e)}')
 
 
@@ -224,13 +248,10 @@ def confirm_qa_completion(session_id, round_index):
                 round_obj.status = 'completed'
                 round_obj.save()
 
-                has_active_rounds = Round.select().where(
-                    (Round.session == session_obj) & (Round.status != 'completed')
-                ).exists()
-
-                if not has_active_rounds and session_obj.status != 'completed':
-                    session_obj.status = 'completed'
-                    session_obj.save()
+                # 更新会话状态为 round_completed
+                session_obj.status = 'round_completed'
+                session_obj.save()
+                logger.info(f"Session {session_id} status updated to round_completed for round {round_index}")
     except Exception as exc:
         logger.error(
             "Failed to update completion status for session %s round %s: %s",

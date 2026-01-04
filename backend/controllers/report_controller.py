@@ -26,6 +26,14 @@ def generate_report(session_id, round_index):
     try:
         from backend.services.evaluation_service import get_evaluation_service
         from backend.services.pdf import get_pdf_generator
+        from backend.services.interview_service import SessionService
+
+        # 更新会话状态为 analyzing
+        session = SessionService.get_session(session_id)
+        if session:
+            session.status = 'analyzing'
+            session.save()
+            logger.info(f"Session {session_id} status updated to analyzing for round {round_index}")
 
         # 生成评价数据
         evaluation_service = get_evaluation_service()

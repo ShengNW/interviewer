@@ -207,21 +207,42 @@ class SessionService:
             return True
         except Session.DoesNotExist:
             return False
-    
+
+    @staticmethod
+    def get_status_display(session: Session) -> str:
+        """获取会话状态的显示文本"""
+        status = session.status
+        current_round = session.current_round
+
+        if status == 'initialized':
+            return '初始化'
+        elif status == 'generating':
+            return f'第{current_round}轮出题中'
+        elif status == 'interviewing':
+            return f'第{current_round}轮面试中'
+        elif status == 'analyzing':
+            return f'第{current_round}轮分析中'
+        elif status == 'round_completed':
+            return f'第{current_round}轮已完成'
+        else:
+            return '未知状态'
+
     @staticmethod
     def to_dict(session: Session) -> Dict[str, Any]:
         """将Session对象转换为字典"""
         rounds = RoundService.get_rounds_by_session(session.id)
         total_questions = 0
-        
+
         for round_obj in rounds:
             total_questions += round_obj.questions_count
-        
+
         return {
             'id': session.id,
             'name': session.name,
             'room_id': session.room.id,
             'status': session.status,
+            'current_round': session.current_round,
+            'status_display': SessionService.get_status_display(session),
             'created_at': session.created_at.isoformat(),
             'updated_at': session.updated_at.isoformat(),
             'rounds_count': len(rounds),

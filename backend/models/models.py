@@ -70,8 +70,9 @@ class Session(BaseModel):
     id = CharField(primary_key=True)
     name = CharField()
     room = ForeignKeyField(Room, backref='sessions')
-    status = CharField(default='active')  # active, completed, paused
-    
+    status = CharField(default='initialized')  # initialized, generating, interviewing, analyzing, round_completed
+    current_round = IntegerField(default=0)  # 当前轮次号，0表示未开始
+
     class Meta:
         table_name = 'sessions'
 
