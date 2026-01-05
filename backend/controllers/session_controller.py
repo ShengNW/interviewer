@@ -146,6 +146,30 @@ def get_session_rounds_async(session_id):
         return ApiResponse.internal_error(f"加载轮次数据失败: {str(e)}")
 
 
+@session_bp.route('/api/session/<session_id>/status', methods=['GET'])
+@require_auth
+@require_resource_owner('session')
+def get_session_status(session_id):
+    """获取会话状态"""
+    from backend.common.response import ApiResponse
+
+    session = SessionService.get_session(session_id)
+    if not session:
+        return ApiResponse.not_found("面试会话")
+
+    try:
+        status_data = {
+            'status': session.status,
+            'current_round': session.current_round,
+            'status_display': SessionService.get_status_display(session)
+        }
+        logger.info(f"Returning session status: {status_data}")
+        return ApiResponse.success(data=status_data)
+    except Exception as e:
+        logger.error(f"Failed to get session status: {e}")
+        return ApiResponse.internal_error(f"获取会话状态失败: {str(e)}")
+
+
 # ==================== 私有辅助函数 ====================
 
 def _resolve_public_host() -> str:

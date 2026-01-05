@@ -4,45 +4,23 @@
 
 {% block extra_css %}
 <style>
-    .candidate-info {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
     .interview-container {
         height: calc(100vh - 200px);
-        display: flex;
-        gap: 1rem;
     }
-    
-    .sidebar {
-        width: 350px;
-        max-height: 100%;
-        overflow-y: auto;
-    }
-    
+
     .chat-area {
-        flex: 1;
+        width: 100%;
         display: flex;
         flex-direction: column;
     }
-    
+
     @media (max-width: 992px) {
         .interview-container {
-            flex-direction: column;
             height: auto;
         }
 
-        .sidebar {
-            width: 100%;
-            max-height: 300px;
-        }
-
         .chat-area {
-            height: calc(100vh - 350px);
+            height: calc(100vh - 200px);
         }
     }
 
@@ -83,6 +61,33 @@
     .status-pending { background-color: #ffc107; }
     .status-completed { background-color: #28a745; }
     .status-error { background-color: #dc3545; }
+
+    /* 会话状态徽章样式 */
+    #sessionStatusBadge {
+        padding: 0.35rem 0.65rem;
+        font-weight: 500;
+        border-radius: 4px;
+    }
+    #sessionStatusBadge.status-initialized {
+        background-color: #6c757d;
+        color: white;
+    }
+    #sessionStatusBadge.status-generating {
+        background-color: #17a2b8;
+        color: white;
+    }
+    #sessionStatusBadge.status-interviewing {
+        background-color: #007bff;
+        color: white;
+    }
+    #sessionStatusBadge.status-analyzing {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    #sessionStatusBadge.status-round_completed {
+        background-color: #28a745;
+        color: white;
+    }
 </style>
 {% endblock %}
 
@@ -110,87 +115,7 @@
         
         <!-- 主要面试界面 -->
         <div class="interview-container">
-            <!-- 左侧边栏：候选人信息和简历 -->
-            <div class="sidebar">
-                {% if resume %}
-                <!-- 候选人基本信息 -->
-                <div class="candidate-info">
-                    <div class="text-center mb-3">
-                        <div class="candidate-avatar mb-2">
-                            <i class="fas fa-user-circle fa-3x"></i>
-                        </div>
-                        <h5 class="mb-1">{{ resume.name }}</h5>
-                        {% if has_custom_jd %}
-                        <p class="mb-0 opacity-75">
-                            <i class="fas fa-file-alt me-1"></i>自定义职位要求
-                        </p>
-                        {% else %}
-                        <p class="mb-0 opacity-75">{{ resume.position }}</p>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="candidate-stats">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <div class="border-end border-light border-opacity-50">
-                                    <h6 class="mb-0">{{ resume.skills|length }}</h6>
-                                    <small class="opacity-75">技能项目</small>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <h6 class="mb-0">{{ resume.projects|length }}</h6>
-                                <small class="opacity-75">项目经验</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 技能列表 -->
-                <div class="card">
-                    <div class="card-header">
-                        <h6 class="mb-0">
-                            <i class="fas fa-cogs me-2"></i>技能栈
-                        </h6>
-                    </div>
-                    <div class="card-body p-2">
-                        <div class="skill-tags">
-                            {% for skill in resume.skills %}
-                            <div class="skill-item mb-2 p-2 border rounded">
-                                <small class="text-muted">{{ loop.index }}.</small>
-                                <span class="ms-1" style="font-size: 0.85rem;">{{ skill[:80] }}{% if skill|length > 80 %}...{% endif %}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 项目经验 -->
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h6 class="mb-0">
-                            <i class="fas fa-project-diagram me-2"></i>项目经验
-                        </h6>
-                    </div>
-                    <div class="card-body p-2">
-                        {% for project in resume.projects %}
-                        <div class="project-item mb-2 p-2 border rounded">
-                            <div class="d-flex align-items-start">
-                                <i class="fas fa-code text-primary me-2 mt-1"></i>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted">项目 {{ loop.index }}</small>
-                                    <div style="font-size: 0.85rem;" class="mt-1">
-                                        {{ project[:100] }}{% if project|length > 100 %}...{% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-            
-            <!-- 右侧：ChatGPT风格对话界面 -->
+            <!-- ChatGPT风格对话界面 -->
             <div class="chat-area">
                 <div class="chat-container">
                     <!-- 聊天头部 -->
@@ -199,6 +124,11 @@
                             <div>
                                 <h6 class="mb-0">{{ session.name }}</h6>
                                 <small class="opacity-75">AI智能面试官</small>
+                                <div class="mt-1">
+                                    <span class="badge" id="sessionStatusBadge" style="font-size: 0.75rem;">
+                                        {{ session.status_display }}
+                                    </span>
+                                </div>
                             </div>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-sm btn-light" onclick="generateQuestions()">
@@ -314,6 +244,63 @@ let currentRoundId = null;
 let currentQuestionData = null;
 let roundsLoaded = false; // 标记轮次是否已加载
 
+// 更新会话状态显示
+function updateSessionStatus(status, statusDisplay) {
+    console.log('🔄 Updating session status:', { status, statusDisplay });
+    const statusBadge = document.getElementById('sessionStatusBadge');
+    if (!statusBadge) {
+        console.warn('❌ Status badge element not found');
+        return;
+    }
+
+    // 移除所有状态class
+    statusBadge.classList.remove('status-initialized', 'status-generating', 'status-interviewing', 'status-analyzing', 'status-round_completed');
+
+    // 添加新的状态class
+    statusBadge.classList.add('status-' + status);
+
+    // 更新显示文本
+    statusBadge.textContent = statusDisplay;
+    console.log('✅ Status badge updated:', statusBadge.className, statusBadge.textContent);
+}
+
+// 从服务器获取最新的会话状态
+async function refreshSessionStatus() {
+    try {
+        console.log('🔍 Fetching session status from server...');
+        const response = await fetch(`/api/session/${SESSION_ID}/status`);
+        if (response.ok) {
+            const data = await response.json();
+            console.log('📥 Received status data:', data);
+            if (data.success && data.data) {
+                updateSessionStatus(data.data.status, data.data.status_display);
+            } else {
+                console.warn('❌ Invalid status response:', data);
+            }
+        } else {
+            console.warn('❌ Status request failed:', response.status);
+        }
+    } catch (error) {
+        console.warn('❌ Failed to refresh session status:', error);
+    }
+}
+
+// 获取当前轮次数量
+async function getCurrentRoundCount() {
+    try {
+        const response = await fetch(`/api/session/${SESSION_ID}/status`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data) {
+                return data.data.current_round || 0;
+            }
+        }
+    } catch (error) {
+        console.warn('Failed to get current round count:', error);
+    }
+    return 0;
+}
+
 // 异步加载数字人
 async function loadDigitalHuman() {
     try {
@@ -370,14 +357,16 @@ function insertRoundHeader(round) {
     roundHeader.innerHTML = `
         <div class="round-info">
             <i class="fas fa-layer-group me-2"></i>
-            <strong>第 ${round.round_index} 轮面试</strong>
+            <strong>第 ${round.round_index + 1} 轮面试</strong>
             <span class="badge bg-primary ms-2">${round.questions_count} 个问题</span>
         </div>
     `;
     chatMessages.appendChild(roundHeader);
 
-    // 渲染该轮次的问题
-    if (round.questions && round.questions.length > 0) {
+    // 只有轮次完成时才渲染所有问题
+    // 如果轮次正在进行中(active)，由 checkActiveRound() 来处理当前问题
+    if (round.status === 'completed' && round.questions && round.questions.length > 0) {
+        console.log(`📋 渲染已完成轮次 ${round.round_index + 1} 的所有问题`);
         round.questions.forEach((qa, index) => {
             // 添加问题消息
             addMessage('ai', qa.question, false);
@@ -387,6 +376,8 @@ function insertRoundHeader(round) {
                 addMessage('user', qa.answer, false);
             }
         });
+    } else if (round.status === 'active') {
+        console.log(`⏳ 轮次 ${round.round_index + 1} 正在进行中，不渲染所有问题`);
     }
 }
 
@@ -512,6 +503,12 @@ async function generateQuestions() {
         document.getElementById('typingIndicator').style.display = 'flex';
         scrollToBottom();
 
+        // 立即更新UI为"出题中"状态（乐观更新）
+        const nextRound = await getCurrentRoundCount() + 1;
+        updateSessionStatus('generating', `第${nextRound}轮出题中`);
+        console.log('🚀 立即显示"出题中"状态');
+
+        // 发送请求
         const response = await fetch(`/generate_questions/${SESSION_ID}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
@@ -539,6 +536,9 @@ async function generateQuestions() {
 
             addMessage('ai', `好的！我为您准备了${result.questions.length}道面试题。让我们逐一进行，请仔细回答每一道题目。`);
             YeyingInterviewer.showToast('success', `成功生成${result.questions.length}道面试题`);
+
+            // 再次刷新会话状态显示（现在应该是 interviewing）
+            await refreshSessionStatus();
 
             await loadCurrentQuestion();
         } else {
@@ -717,6 +717,11 @@ async function generateRoundReport(sessionId, roundIndex) {
         // 显示进度模态框
         showReportGeneratingModal();
 
+        // 立即更新UI为"分析中"状态（乐观更新）
+        updateSessionStatus('analyzing', `第${roundIndex + 1}轮分析中`);
+        console.log('🚀 立即显示"分析中"状态');
+
+        // 发送请求
         const response = await fetch(`/api/generate_report/${sessionId}/${roundIndex}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
@@ -739,6 +744,9 @@ async function generateRoundReport(sessionId, roundIndex) {
 
             // 在聊天中添加成功消息
             addMessage('ai', `📊 第${roundIndex + 1}轮面试报告生成完成！您可以点击下方按钮查看或下载报告。`);
+
+            // 再次刷新会话状态显示（现在应该是 round_completed）
+            await refreshSessionStatus();
 
         } else {
             YeyingInterviewer.showToast('error', data.error || data.message || '生成报告失败');
@@ -1068,6 +1076,17 @@ async function checkExistingReports() {
         console.error('检查报告状态失败:', error);
     }
 }
+
+// 页面加载完成后的初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 设置初始状态class
+    const initialStatus = '{{ session.status }}';
+    const initialStatusDisplay = '{{ session.status_display }}';
+    updateSessionStatus(initialStatus, initialStatusDisplay);
+
+    // 异步刷新最新状态（因为页面渲染时状态可能已经改变）
+    refreshSessionStatus();
+});
 </script>
 
 <style>
