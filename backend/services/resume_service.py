@@ -154,6 +154,8 @@ class ResumeService:
         Raises:
             PermissionError: 无权操作
         """
+        from backend.clients.minio_client import delete_resume_folder
+
         resume = Resume.get_by_id(resume_id)
 
         if resume.owner_address != user:
@@ -177,6 +179,13 @@ class ResumeService:
             Resume.update(status='deleted').where(
                 Resume.id.in_(all_ids)
             ).execute()
+
+            # 删除 MinIO 文件
+            for rid in all_ids:
+                try:
+                    delete_resume_folder(rid)
+                except Exception as e:
+                    logger.warning(f"Failed to delete MinIO files for {rid}: {e}")
 
         logger.info(f"Deleted resume tree: {resume_id}, total {len(all_ids)} nodes")
         return len(all_ids)

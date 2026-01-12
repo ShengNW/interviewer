@@ -1,165 +1,287 @@
 {% extends "base_user.html" %}
 
-{% block title %}简历 - 夜莺面试官{% endblock %}
+{% block title %}简历管理 - 夜莺面试官{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 树状结构样式 */
+.resume-tree {
+    padding-left: 0;
+}
+
+.resume-tree-item {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.resume-tree-item .children {
+    padding-left: 2.5rem;
+    margin-top: 1rem;
+    border-left: 2px dashed rgba(102, 126, 234, 0.3);
+    margin-left: 1.25rem;
+}
+
+.resume-tree-item .children .resume-tree-item {
+    position: relative;
+}
+
+.resume-tree-item .children .resume-tree-item::before {
+    content: '';
+    position: absolute;
+    left: -2.5rem;
+    top: 1.5rem;
+    width: 2rem;
+    height: 2px;
+    background: rgba(102, 126, 234, 0.3);
+}
+
+/* 简历卡片样式 */
+.resume-node {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 1rem 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.resume-node:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.resume-node.status-draft {
+    border-left: 4px solid #f59e0b;
+}
+
+.resume-node.status-published {
+    border-left: 4px solid #10b981;
+}
+
+/* 状态徽章 */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.draft {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.status-badge.published {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+/* 深度指示器 */
+.depth-indicator {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    background: #f3f4f6;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+}
+
+/* 操作按钮 */
+.action-btn {
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: scale(1.05);
+}
+
+.action-btn.btn-fork {
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--accent-blue);
+}
+
+.action-btn.btn-publish {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.action-btn.btn-unpublish {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.action-btn.btn-preview {
+    background: rgba(168, 85, 247, 0.1);
+    color: var(--accent-purple);
+}
+
+.action-btn.btn-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* 创建简历卡片 */
+.create-resume-card {
+    border: 2px dashed rgba(102, 126, 234, 0.3);
+    background: rgba(102, 126, 234, 0.02);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.create-resume-card:hover {
+    border-color: var(--accent-blue);
+    background: rgba(102, 126, 234, 0.05);
+    transform: translateY(-2px);
+}
+
+/* 空状态 */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #9ca3af;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    color: #d1d5db;
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4">
     <!-- 页面标题 -->
     <div class="row mb-4" style="margin-top: 40px;">
-        <div class="col-12">
-            <h2 class="fw-bold mb-1" style="font-size: 2rem;">
-                <i class="fas fa-file-alt me-3" style="color: var(--accent-blue);"></i>
-                简历管理
-            </h2>
-            <p class="text-muted mb-0">管理你的所有简历文档</p>
-        </div>
-    </div>
-
-    <!-- 简历列表 -->
-    <div class="row g-4 mb-5" id="resumesList">
-        <!-- 上传新简历卡片 -->
-        <div class="col-lg-4 col-md-6">
-            <div class="card h-100 upload-resume-card" style="cursor: pointer; border: 2px dashed rgba(102, 126, 234, 0.3); background: rgba(102, 126, 234, 0.02); transition: all 0.3s ease;" onclick="document.getElementById('resumeFileInput').click()">
-                <div class="card-body d-flex flex-column align-items-center justify-content-center text-center">
-                    <div style="width: 80px; height: 80px; background: rgba(102, 126, 234, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; transition: all 0.3s ease;">
-                        <i class="fas fa-upload" style="font-size: 2.5rem; color: var(--accent-blue);"></i>
-                    </div>
-                    <h5 class="fw-bold mb-2" style="color: var(--accent-blue);">上传新简历</h5>
-                    <p class="text-muted mb-0" style="font-size: 0.9rem;">支持 PDF 格式</p>
-                </div>
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-1" style="font-size: 2rem;">
+                    <i class="fas fa-file-alt me-3" style="color: var(--accent-blue);"></i>
+                    简历管理
+                </h2>
+                <p class="text-muted mb-0">树状版本管理，轻松维护多个简历版本</p>
             </div>
+            <button class="btn btn-primary" onclick="showCreateModal()" style="border-radius: 10px; padding: 0.6rem 1.5rem;">
+                <i class="fas fa-plus me-2"></i>创建简历
+            </button>
         </div>
-
-        <!-- 简历卡片将由JavaScript动态生成 -->
     </div>
 
     <!-- 统计面板 -->
-    <div class="row g-4" style="margin-top: 3rem;">
-        <div class="col-12 mb-3">
-            <h5 class="fw-bold" style="color: #4a5568;">
-                <i class="fas fa-chart-bar me-2"></i>简历统计
-            </h5>
-        </div>
-        <div class="col-md-4 col-sm-6">
-            <div class="card text-center" style="padding: 1.5rem 1rem;">
-                <div style="width: 50px; height: 50px; margin: 0 auto 0.75rem; background: rgba(102, 126, 234, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-file-alt" style="font-size: 1.5rem; color: var(--accent-blue);"></i>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-center" style="padding: 1rem;">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div style="width: 40px; height: 40px; background: rgba(102, 126, 234, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                        <i class="fas fa-file-alt" style="color: var(--accent-blue);"></i>
+                    </div>
+                    <div class="text-start">
+                        <h5 class="mb-0 fw-bold" style="color: var(--accent-blue);" id="totalResumes">0</h5>
+                        <small class="text-muted">简历总数</small>
+                    </div>
                 </div>
-                <h4 class="fw-bold mb-1" style="color: var(--accent-blue);" id="totalResumes">0</h4>
-                <p class="mb-0 text-muted" style="font-size: 0.9rem;">简历总数</p>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6">
-            <div class="card text-center" style="padding: 1.5rem 1rem;">
-                <div style="width: 50px; height: 50px; margin: 0 auto 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-check-circle" style="font-size: 1.5rem; color: var(--accent-green);"></i>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-center" style="padding: 1rem;">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div style="width: 40px; height: 40px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                        <i class="fas fa-check-circle" style="color: var(--accent-green);"></i>
+                    </div>
+                    <div class="text-start">
+                        <h5 class="mb-0 fw-bold" style="color: var(--accent-green);" id="publishedResumes">0</h5>
+                        <small class="text-muted">已发布</small>
+                    </div>
                 </div>
-                <h4 class="fw-bold mb-1" style="color: var(--accent-green);" id="totalResumes2">0</h4>
-                <p class="mb-0 text-muted" style="font-size: 0.9rem;">已分析</p>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6">
-            <div class="card text-center" style="padding: 1.5rem 1rem;">
-                <div style="width: 50px; height: 50px; margin: 0 auto 0.75rem; background: rgba(168, 85, 247, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-link" style="font-size: 1.5rem; color: var(--accent-purple);"></i>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-center" style="padding: 1rem;">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div style="width: 40px; height: 40px; background: rgba(245, 158, 11, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                        <i class="fas fa-edit" style="color: #f59e0b;"></i>
+                    </div>
+                    <div class="text-start">
+                        <h5 class="mb-0 fw-bold" style="color: #f59e0b;" id="draftResumes">0</h5>
+                        <small class="text-muted">编辑中</small>
+                    </div>
                 </div>
-                <h4 class="fw-bold mb-1" style="color: var(--accent-purple);" id="linkedRooms">0</h4>
-                <p class="mb-0 text-muted" style="font-size: 0.9rem;">关联面试间</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-center" style="padding: 1rem;">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div style="width: 40px; height: 40px; background: rgba(168, 85, 247, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                        <i class="fas fa-link" style="color: var(--accent-purple);"></i>
+                    </div>
+                    <div class="text-start">
+                        <h5 class="mb-0 fw-bold" style="color: var(--accent-purple);" id="linkedRooms">0</h5>
+                        <small class="text-muted">关联面试间</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 简历树列表 -->
+    <div class="row">
+        <div class="col-12">
+            <div id="resumeTreesContainer">
+                <!-- 由 JavaScript 动态生成 -->
             </div>
         </div>
     </div>
 </div>
 
-<!-- 隐藏的文件上传input -->
-<input type="file" id="resumeFileInput" accept=".pdf" style="display: none;">
-
-<!-- 上传简历模态框 -->
-<div class="modal fade" id="uploadResumeModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+<!-- 创建简历模态框 -->
+<div class="modal fade" id="createResumeModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header border-0">
                 <h5 class="modal-title">
-                    <i class="fas fa-upload me-2" style="color: var(--accent-blue);"></i>
-                    上传简历
+                    <i class="fas fa-plus-circle me-2" style="color: var(--accent-blue);"></i>
+                    创建新简历
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" id="closeModalBtn"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="uploadResumeForm">
+                <form id="createResumeForm">
                     <div class="mb-3">
                         <label class="form-label">
                             <i class="fas fa-file-signature me-1"></i>
                             简历名称 <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control" id="resumeName" placeholder="例如：前端开发_张三" required>
+                        <input type="text" class="form-control" id="newResumeName" placeholder="例如：Java开发_2025" required>
+                        <small class="text-muted">建议格式：岗位_年份</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">
-                            <i class="fas fa-file-pdf me-1"></i>
-                            已选择文件
+                            <i class="fas fa-building me-1"></i>
+                            目标公司 <span class="text-muted">(可选)</span>
                         </label>
-                        <p class="text-muted mb-0" id="selectedFileName">
-                            <i class="fas fa-check-circle text-success me-1"></i>
-                            <span>无</span>
-                        </p>
+                        <input type="text" class="form-control" id="newResumeCompany" placeholder="例如：阿里巴巴">
                     </div>
-                    <div class="alert alert-info mb-0" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 8px;">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <small>上传后将自动进行 PDF 解析和 OCR 识别，可能需要 30-60 秒，请耐心等待</small>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-briefcase me-1"></i>
+                            目标职位 <span class="text-muted">(可选)</span>
+                        </label>
+                        <input type="text" class="form-control" id="newResumePosition" placeholder="例如：高级Java工程师">
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelUploadBtn">
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>取消
                 </button>
-                <button type="button" class="btn btn-primary" id="confirmUploadBtn">
-                    <i class="fas fa-cloud-upload-alt me-2"></i>开始上传
+                <button type="button" class="btn btn-primary" id="confirmCreateBtn">
+                    <i class="fas fa-check me-1"></i>创建
                 </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 上传进度模态框 -->
-<div class="modal fade" id="uploadProgressModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body text-center py-5">
-                <div class="mb-4">
-                    <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold mb-3" id="uploadStatusTitle">正在上传简历...</h5>
-                <p class="text-muted mb-4" id="uploadStatusText">正在上传文件到服务器</p>
-
-                <!-- 进度步骤 -->
-                <div class="progress-steps text-start" style="max-width: 400px; margin: 0 auto;">
-                    <div class="step mb-3 pb-3" style="border-bottom: 1px solid #e2e8f0;" id="step-upload">
-                        <div class="d-flex align-items-center">
-                            <div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>
-                            <span>上传文件</span>
-                        </div>
-                    </div>
-                    <div class="step mb-3 pb-3" style="border-bottom: 1px solid #e2e8f0; opacity: 0.5;" id="step-parse">
-                        <div class="d-flex align-items-center">
-                            <div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>
-                            <span>解析 PDF 文档</span>
-                        </div>
-                    </div>
-                    <div class="step" style="opacity: 0.5;" id="step-ocr">
-                        <div class="d-flex align-items-center">
-                            <div class="spinner-grow spinner-grow-sm me-3 text-primary"></div>
-                            <span>OCR 识别内容</span>
-                        </div>
-                    </div>
-                </div>
-
-                <p class="text-muted mt-4 mb-0" style="font-size: 0.875rem;">
-                    <i class="fas fa-clock me-1"></i>
-                    预计需要 30-60 秒，请勿关闭页面
-                </p>
             </div>
         </div>
     </div>
@@ -177,7 +299,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="mb-0" id="deleteConfirmText">确定要删除这份简历吗？此操作不可恢复。</p>
+                <p id="deleteConfirmText">确定要删除这份简历吗？</p>
+                <div class="alert alert-warning" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <small>删除将同时删除所有子版本，此操作不可恢复！</small>
+                </div>
             </div>
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -191,458 +317,332 @@
     </div>
 </div>
 
-<!-- 重命名模态框 -->
-<div class="modal fade" id="renameModal" tabindex="-1">
+<!-- 预览加载模态框 -->
+<div class="modal fade" id="previewLoadingModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title">
-                    <i class="fas fa-edit me-2" style="color: var(--accent-blue);"></i>
-                    重命名简历
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="renameForm">
-                    <div class="mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-file-signature me-1"></i>
-                            新名称 <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" class="form-control" id="newResumeName" placeholder="请输入新的简历名称" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>取消
-                </button>
-                <button type="button" class="btn btn-primary" id="confirmRenameBtn">
-                    <i class="fas fa-check me-1"></i>确认
-                </button>
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+                <h6 class="mb-2">正在生成 PDF 预览...</h6>
+                <small class="text-muted">这可能需要几秒钟</small>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-/* 确保所有简历卡片高度一致 */
-.upload-resume-card,
-.resume-card {
-    min-height: 280px;
-}
-
-/* 简历卡片样式和左侧装饰线 */
-.resume-card {
-    border-top: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
-    border-bottom: 1px solid var(--border-color);
-    border-left: 4px solid var(--accent-green);
-    border-radius: 12px;
-}
-
-.upload-resume-card:hover {
-    border-color: var(--accent-blue) !important;
-    background: rgba(102, 126, 234, 0.05) !important;
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
-}
-
-.upload-resume-card:hover .fa-upload {
-    transform: scale(1.1);
-}
-
-.resume-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.modal-dialog {
-    margin-top: 100px !important;
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    let selectedFile = null;
-    let resumeToDelete = null; // 存储要删除的简历ID
-    let resumeToRename = null; // 存储要重命名的简历ID
-    const uploadModal = new bootstrap.Modal(document.getElementById('uploadResumeModal'));
-    const progressModal = new bootstrap.Modal(document.getElementById('uploadProgressModal'));
+    // 模态框实例
+    const createModal = new bootstrap.Modal(document.getElementById('createResumeModal'));
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    const renameModal = new bootstrap.Modal(document.getElementById('renameModal'));
+    const previewLoadingModal = new bootstrap.Modal(document.getElementById('previewLoadingModal'));
 
-    // 加载简历列表
-    loadResumes();
+    let resumeToDelete = null;
 
-    // 文件选择
-    $('#resumeFileInput').on('change', function(e) {
-        const file = e.target.files[0];
-        console.log('File selected:', file);
-        if (file) {
-            // 验证文件类型
-            if (!file.name.toLowerCase().endsWith('.pdf')) {
-                showToast('warning', '只支持 PDF 格式的简历文件');
-                this.value = '';
-                return;
-            }
+    // 加载简历树
+    loadResumeTrees();
 
-            // 验证文件大小（限制10MB）
-            if (file.size > 10 * 1024 * 1024) {
-                showToast('warning', '文件大小不能超过 10MB');
-                this.value = '';
-                return;
-            }
+    // 创建简历
+    window.showCreateModal = function() {
+        $('#createResumeForm')[0].reset();
+        createModal.show();
+    };
 
-            selectedFile = file;
-            $('#selectedFileName span').text(file.name);
-            $('#resumeName').val(file.name.replace('.pdf', ''));
-
-            // 显示上传对话框
-            console.log('Showing upload modal...');
-            uploadModal.show();
-        }
-        // 重置input，允许重新选择同一文件
-        this.value = '';
-    });
-
-    // 确认上传
-    $('#confirmUploadBtn').on('click', function() {
-        if (!selectedFile) {
-            alert('请选择文件');
-            return;
-        }
-
-        const name = $('#resumeName').val().trim();
+    $('#confirmCreateBtn').on('click', function() {
+        const name = $('#newResumeName').val().trim();
         if (!name) {
             alert('请输入简历名称');
             return;
         }
 
-        const formData = new FormData();
-        formData.append('resume', selectedFile);
-        formData.append('name', name);
-
-        uploadResume(formData);
-    });
-
-    // 上传简历
-    function uploadResume(formData) {
-        // 隐藏上传对话框
-        uploadModal.hide();
-
-        // 显示进度对话框
-        progressModal.show();
-
-        // 重置进度步骤
-        resetProgressSteps();
-
-        // 模拟进度更新（因为后端是同步的，我们模拟进度显示）
-        let progressTimer = null;
-        let currentStep = 0;
-
-        progressTimer = setInterval(function() {
-            currentStep++;
-            if (currentStep === 1) {
-                updateProgress('step-parse', '解析 PDF 文档中...');
-            } else if (currentStep === 2) {
-                updateProgress('step-ocr', 'OCR 识别内容中...');
-            }
-        }, 8000);
+        const data = {
+            name: name,
+            target_company: $('#newResumeCompany').val().trim() || null,
+            target_position: $('#newResumePosition').val().trim() || null
+        };
 
         $.ajax({
-            url: '/api/resumes/upload',
+            url: '/api/resumes',
             method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
+            contentType: 'application/json',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            data: JSON.stringify(data),
             success: function(response) {
-                clearInterval(progressTimer);
-
                 if (response.code === 200) {
-                    // 显示成功状态
-                    showSuccess();
-
-                    setTimeout(function() {
-                        progressModal.hide();
-                        loadResumes();
-                        // 重置表单和文件
-                        $('#uploadResumeForm')[0].reset();
-                        $('#selectedFileName span').text('无');
-                        selectedFile = null;
-                    }, 2000);
+                    createModal.hide();
+                    loadResumeTrees();
+                    showToast('success', '简历创建成功');
                 } else {
-                    clearInterval(progressTimer);
-                    progressModal.hide();
-                    showToast('error', '上传失败：' + (response.message || '未知错误'));
+                    alert('创建失败：' + (response.message || '未知错误'));
                 }
             },
             error: function(xhr) {
-                clearInterval(progressTimer);
-                progressModal.hide();
-
-                const response = xhr.responseJSON;
-                let errorMsg = '网络错误';
-
-                if (response && response.message) {
-                    errorMsg = response.message;
-                }
-
-                showToast('error', '上传失败：' + errorMsg);
-                console.error('Upload error:', xhr);
+                alert('创建失败：' + (xhr.responseJSON?.message || '网络错误'));
             }
         });
-    }
+    });
 
-    // 重置进度步骤
-    function resetProgressSteps() {
-        $('#step-upload').css('opacity', '1').find('.spinner-grow').show();
-        $('#step-parse').css('opacity', '0.5').find('.spinner-grow').show();
-        $('#step-ocr').css('opacity', '0.5').find('.spinner-grow').show();
-
-        $('#uploadStatusTitle').text('正在上传简历...');
-        $('#uploadStatusText').text('正在上传文件到服务器');
-    }
-
-    // 更新进度
-    function updateProgress(stepId, statusText) {
-        // 完成上一步
-        const prevSteps = {
-            'step-parse': 'step-upload',
-            'step-ocr': 'step-parse'
-        };
-
-        if (prevSteps[stepId]) {
-            const prevStep = $('#' + prevSteps[stepId]);
-            prevStep.find('.spinner-grow').replaceWith('<i class="fas fa-check-circle text-success me-3"></i>');
-        }
-
-        // 激活当前步骤
-        $('#' + stepId).css('opacity', '1');
-        $('#uploadStatusText').text(statusText);
-    }
-
-    // 显示成功状态
-    function showSuccess() {
-        $('#step-ocr').find('.spinner-grow').replaceWith('<i class="fas fa-check-circle text-success me-3"></i>');
-        $('#uploadStatusTitle').html('<i class="fas fa-check-circle text-success me-2"></i>上传成功！');
-        $('#uploadStatusText').text('简历已成功上传并识别完成');
-
-        // 所有步骤显示完成
-        $('.step').css('opacity', '1');
-        $('.step .spinner-grow').replaceWith('<i class="fas fa-check-circle text-success me-3"></i>');
-    }
-
-    // 加载简历列表
-    function loadResumes() {
+    // 加载简历树
+    function loadResumeTrees() {
         $.ajax({
-            url: '/api/resumes',
+            url: '/api/resumes/trees',
             method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
             success: function(response) {
                 if (response.code === 200) {
-                    renderResumes(response.data.resumes);
+                    renderResumeTrees(response.data.trees);
                     updateStats(response.data.stats);
                 }
             },
             error: function(xhr) {
-                console.error('Failed to load resumes:', xhr);
+                console.error('Failed to load resume trees:', xhr);
             }
         });
     }
 
-    // 渲染简历列表
-    function renderResumes(resumes) {
-        const container = $('#resumesList');
-        const uploadCard = container.find('.upload-resume-card').parent();
+    // 渲染简历树
+    function renderResumeTrees(trees) {
+        const container = $('#resumeTreesContainer');
+        container.empty();
 
-        // 清空现有卡片（保留上传卡片）
-        container.children().not(uploadCard).remove();
+        if (!trees || trees.length === 0) {
+            container.html(`
+                <div class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <h5>还没有简历</h5>
+                    <p class="mb-3">点击上方按钮创建你的第一份简历</p>
+                    <button class="btn btn-primary" onclick="showCreateModal()">
+                        <i class="fas fa-plus me-2"></i>创建简历
+                    </button>
+                </div>
+            `);
+            return;
+        }
 
-        resumes.forEach(function(resume) {
-            const card = createResumeCard(resume);
-            container.append(card);
+        trees.forEach(function(tree) {
+            container.append(renderTreeNode(tree, 0));
         });
     }
 
-    // 创建简历卡片
-    function createResumeCard(resume) {
-        const createdDate = new Date(resume.created_at).toLocaleDateString('zh-CN');
+    // 渲染树节点（递归）
+    function renderTreeNode(node, depth) {
+        const statusClass = node.status === 'published' ? 'status-published' : 'status-draft';
+        const statusText = node.status === 'published' ? '已发布' : '编辑中';
+        const statusBadgeClass = node.status === 'published' ? 'published' : 'draft';
 
-        return `
-            <div class="col-lg-4 col-md-6">
-                <div class="card h-100 resume-card" style="cursor: pointer; transition: all 0.3s ease;" onclick="if(!event.target.closest('button')) viewResume('${resume.id}')">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                                <i class="fas fa-file-pdf" style="color: white; font-size: 1.1rem;"></i>
+        const canFork = depth < 4; // 最大深度5，所以depth<4时可以fork
+        const isRoot = depth === 0;
+
+        let html = `
+            <div class="resume-tree-item">
+                <div class="resume-node ${statusClass}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="d-flex align-items-center flex-grow-1" style="cursor: pointer;" onclick="viewResume('${node.id}')">
+                            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; flex-shrink: 0;">
+                                <i class="fas fa-file-alt" style="color: white; font-size: 1.2rem;"></i>
                             </div>
                             <div>
-                                <h6 class="mb-0 fw-bold">${resume.name}</h6>
-                                <small class="text-muted">最后更新: ${createdDate}</small>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-sm" onclick="renameResume('${resume.id}', '${resume.name.replace(/'/g, "\\'")}'); event.stopPropagation();" style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); border: none; padding: 0.375rem 0.75rem; border-radius: 8px;">
-                                <i class="fas fa-edit me-1"></i>重命名
-                            </button>
-                            <button class="btn btn-sm" data-resume-id="${resume.id}" data-resume-name="${resume.name}" data-linked-rooms='${JSON.stringify(resume.linked_rooms || [])}' onclick="deleteResumeFromData(this); event.stopPropagation();" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; padding: 0.375rem 0.75rem; border-radius: 8px;">
-                                <i class="fas fa-trash me-1"></i>删除
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="card-body">
-                        ${resume.company || resume.position ? `
-                        <div class="mb-2">
-                            ${resume.company ? `<div><small class="text-muted"><i class="fas fa-building me-1"></i>${resume.company}</small></div>` : ''}
-                            ${resume.position ? `<div><small class="text-muted"><i class="fas fa-briefcase me-1"></i>${resume.position}</small></div>` : ''}
-                        </div>
-                        ` : ''}
-                        <div class="row text-center mt-3">
-                            <div class="col-12">
-                                <div style="padding: 0.5rem 0;">
-                                    <h6 class="mb-1 fw-bold" style="color: var(--accent-purple);">${resume.linked_rooms_count || 0}</h6>
-                                    <small class="text-muted">关联面试间</small>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <h6 class="mb-0 fw-bold">${escapeHtml(node.name)}</h6>
+                                    <span class="status-badge ${statusBadgeClass}">${statusText}</span>
+                                    ${depth > 0 ? `<span class="depth-indicator">L${depth}</span>` : ''}
+                                </div>
+                                <div class="text-muted" style="font-size: 0.85rem;">
+                                    ${node.target_company ? `<span class="me-3"><i class="fas fa-building me-1"></i>${escapeHtml(node.target_company)}</span>` : ''}
+                                    ${node.target_position ? `<span><i class="fas fa-briefcase me-1"></i>${escapeHtml(node.target_position)}</span>` : ''}
+                                    ${!node.target_company && !node.target_position ? `<span class="text-muted">创建于 ${formatDate(node.created_at)}</span>` : ''}
                                 </div>
                             </div>
                         </div>
+                        <div class="d-flex gap-2 flex-shrink-0">
+                            <button class="action-btn btn-preview" onclick="previewResume('${node.id}')" title="预览PDF">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${canFork ? `
+                            <button class="action-btn btn-fork" onclick="forkResume('${node.id}')" title="创建子版本">
+                                <i class="fas fa-code-branch"></i>
+                            </button>
+                            ` : ''}
+                            ${node.status === 'draft' ? `
+                            <button class="action-btn btn-publish" onclick="publishResume('${node.id}')" title="发布">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            ` : `
+                            <button class="action-btn btn-unpublish" onclick="unpublishResume('${node.id}')" title="取消发布">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            `}
+                            <button class="action-btn btn-delete" onclick="deleteResume('${node.id}', '${escapeHtml(node.name)}', ${(node.children || []).length})" title="删除">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
         `;
+
+        // 递归渲染子节点
+        if (node.children && node.children.length > 0) {
+            html += '<div class="children">';
+            node.children.forEach(function(child) {
+                html += renderTreeNode(child, depth + 1);
+            });
+            html += '</div>';
+        }
+
+        html += '</div>';
+        return html;
     }
 
     // 更新统计信息
     function updateStats(stats) {
         $('#totalResumes').text(stats.total_resumes || 0);
-        $('#totalResumes2').text(stats.total_resumes || 0);
+        $('#publishedResumes').text(stats.published || 0);
+        $('#draftResumes').text(stats.draft || 0);
         $('#linkedRooms').text(stats.linked_rooms || 0);
     }
 
-    // 全局函数：查看简历
+    // 查看简历详情
     window.viewResume = function(resumeId) {
         window.location.href = `/resumes/${resumeId}`;
     };
 
-    // 全局函数：从按钮data属性读取数据并删除简历
-    window.deleteResumeFromData = function(button) {
-        const resumeId = $(button).attr('data-resume-id');
-        const resumeName = $(button).attr('data-resume-name');
-        const linkedRoomsStr = $(button).attr('data-linked-rooms');
-        let linkedRooms = [];
-
-        console.log('Delete button clicked:', {resumeId, resumeName, linkedRoomsStr});
-
-        try {
-            if (linkedRoomsStr && linkedRoomsStr !== 'null' && linkedRoomsStr !== '') {
-                linkedRooms = JSON.parse(linkedRoomsStr);
-            }
-        } catch (e) {
-            console.error('Failed to parse linked_rooms:', e, linkedRoomsStr);
-        }
-
-        deleteResume(resumeId, resumeName, linkedRooms);
-    };
-
-    // 全局函数：删除简历
-    window.deleteResume = function(resumeId, resumeName, linkedRooms) {
-        resumeToDelete = resumeId;
-        let message = `确定要删除简历"${resumeName}"吗？`;
-        if (linkedRooms && linkedRooms.length > 0) {
-            message += `\n\n⚠️ 警告：该简历关联了 ${linkedRooms.length} 个面试间，删除简历将同时删除以下面试间：\n`;
-            linkedRooms.forEach((room, index) => {
-                message += `${index + 1}. ${room.id}: ${room.name}\n`;
-            });
-        }
-        message += '\n此操作不可恢复。';
-        $('#deleteConfirmText').html(message.replace(/\n/g, '<br>'));
-        deleteModal.show();
-    };
-
-    // 确认删除按钮点击事件
-    $('#confirmDeleteBtn').on('click', function() {
-        if (!resumeToDelete) {
+    // Fork 简历
+    window.forkResume = function(resumeId) {
+        if (!confirm('确定要基于此版本创建子版本吗？')) {
             return;
         }
 
-        // 隐藏删除确认对话框
+        $.ajax({
+            url: `/api/resumes/${resumeId}/fork`,
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            success: function(response) {
+                if (response.code === 200) {
+                    loadResumeTrees();
+                    showToast('success', '子版本创建成功');
+                } else {
+                    alert('创建失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                alert('创建失败：' + (xhr.responseJSON?.message || '网络错误'));
+            }
+        });
+    };
+
+    // 发布简历
+    window.publishResume = function(resumeId) {
+        $.ajax({
+            url: `/api/resumes/${resumeId}/publish`,
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            success: function(response) {
+                if (response.code === 200) {
+                    loadResumeTrees();
+                    showToast('success', '简历已发布');
+                } else {
+                    alert('发布失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                alert('发布失败：' + (xhr.responseJSON?.message || '网络错误'));
+            }
+        });
+    };
+
+    // 取消发布
+    window.unpublishResume = function(resumeId) {
+        $.ajax({
+            url: `/api/resumes/${resumeId}/unpublish`,
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            success: function(response) {
+                if (response.code === 200) {
+                    loadResumeTrees();
+                    showToast('success', '已取消发布');
+                } else {
+                    alert('操作失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                alert('操作失败：' + (xhr.responseJSON?.message || '网络错误'));
+            }
+        });
+    };
+
+    // 预览 PDF
+    window.previewResume = function(resumeId) {
+        previewLoadingModal.show();
+
+        $.ajax({
+            url: `/api/resumes/${resumeId}/preview`,
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            success: function(response) {
+                previewLoadingModal.hide();
+                if (response.code === 200 && response.data.preview_url) {
+                    window.open(response.data.preview_url, '_blank');
+                } else {
+                    alert('预览失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                previewLoadingModal.hide();
+                alert('预览失败：' + (xhr.responseJSON?.message || '网络错误'));
+            }
+        });
+    };
+
+    // 删除简历
+    window.deleteResume = function(resumeId, resumeName, childrenCount) {
+        resumeToDelete = resumeId;
+        let message = `确定要删除简历"${resumeName}"吗？`;
+        if (childrenCount > 0) {
+            message += `<br><br><strong>该简历有 ${childrenCount} 个子版本，将一并删除！</strong>`;
+        }
+        $('#deleteConfirmText').html(message);
+        deleteModal.show();
+    };
+
+    $('#confirmDeleteBtn').on('click', function() {
+        if (!resumeToDelete) return;
+
         deleteModal.hide();
 
         $.ajax({
             url: `/api/resumes/${resumeToDelete}`,
             method: 'DELETE',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
             success: function(response) {
                 if (response.code === 200) {
-                    loadResumes();
+                    loadResumeTrees();
+                    showToast('success', response.message || '删除成功');
                     resumeToDelete = null;
                 } else {
                     alert('删除失败：' + (response.message || '未知错误'));
                 }
             },
             error: function(xhr) {
-                const response = xhr.responseJSON;
-                alert('删除失败：' + (response?.message || '网络错误'));
+                alert('删除失败：' + (xhr.responseJSON?.message || '网络错误'));
             }
         });
     });
 
-    // 全局函数：重命名简历
-    window.renameResume = function(resumeId, currentName) {
-        resumeToRename = resumeId;
-        $('#newResumeName').val(currentName);
-        renameModal.show();
-    };
+    // 辅助函数
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
-    // 确认重命名按钮点击事件
-    $('#confirmRenameBtn').on('click', function() {
-        if (!resumeToRename) {
-            return;
-        }
-
-        const newName = $('#newResumeName').val().trim();
-        if (!newName) {
-            alert('请输入新名称');
-            return;
-        }
-
-        // 隐藏重命名对话框
-        renameModal.hide();
-
-        $.ajax({
-            url: `/api/resumes/${resumeToRename}`,
-            method: 'PUT',
-            contentType: 'application/json',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
-            data: JSON.stringify({
-                name: newName
-            }),
-            success: function(response) {
-                if (response.code === 200) {
-                    loadResumes();
-                    resumeToRename = null;
-                } else {
-                    alert('重命名失败：' + (response.message || '未知错误'));
-                }
-            },
-            error: function(xhr) {
-                const response = xhr.responseJSON;
-                alert('重命名失败：' + (response?.message || '网络错误'));
-            }
-        });
-    });
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('zh-CN');
+    }
 });
 </script>
 {% endblock %}
