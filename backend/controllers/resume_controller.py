@@ -40,8 +40,8 @@ def create_resume():
         if not name:
             return ApiResponse.bad_request('简历名称不能为空')
 
-        target_company = data.get('target_company', '').strip() or None
-        target_position = data.get('target_position', '').strip() or None
+        target_company = (data.get('target_company') or '').strip() or None
+        target_position = (data.get('target_position') or '').strip() or None
 
         resume = ResumeService.create_root_resume(
             owner_address=current_user,

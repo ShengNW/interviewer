@@ -240,46 +240,33 @@
 
 <!-- 创建简历模态框 -->
 <div class="modal fade" id="createResumeModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <div class="modal-header border-0">
+            <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title">
                     <i class="fas fa-plus-circle me-2" style="color: var(--accent-blue);"></i>
                     创建新简历
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body pt-3">
                 <form id="createResumeForm">
-                    <div class="mb-3">
-                        <label class="form-label">
+                    <div class="mb-0">
+                        <label class="form-label mb-2">
                             <i class="fas fa-file-signature me-1"></i>
-                            简历名称 <span class="text-danger">*</span>
+                            简历名称
                         </label>
-                        <input type="text" class="form-control" id="newResumeName" placeholder="例如：Java开发_2025" required>
-                        <small class="text-muted">建议格式：岗位_年份</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-building me-1"></i>
-                            目标公司 <span class="text-muted">(可选)</span>
-                        </label>
-                        <input type="text" class="form-control" id="newResumeCompany" placeholder="例如：阿里巴巴">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-briefcase me-1"></i>
-                            目标职位 <span class="text-muted">(可选)</span>
-                        </label>
-                        <input type="text" class="form-control" id="newResumePosition" placeholder="例如：高级Java工程师">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newResumeName" placeholder="例如：Java开发" required autofocus>
+                            <span class="input-group-text" id="yearSuffix"></span>
+                        </div>
+                        <small class="text-muted">系统自动添加年份后缀</small>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>取消
-                </button>
-                <button type="button" class="btn btn-primary" id="confirmCreateBtn">
+            <div class="modal-footer border-0 pt-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary btn-sm" id="confirmCreateBtn">
                     <i class="fas fa-check me-1"></i>创建
                 </button>
             </div>
@@ -345,22 +332,38 @@ $(document).ready(function() {
     loadResumeTrees();
 
     // 创建简历
+    const currentYear = new Date().getFullYear();
+
     window.showCreateModal = function() {
         $('#createResumeForm')[0].reset();
+        $('#yearSuffix').text('_' + currentYear);
         createModal.show();
+        // 延迟聚焦，等模态框动画完成
+        setTimeout(() => $('#newResumeName').focus(), 300);
     };
 
+    // 回车键提交
+    $('#newResumeName').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#confirmCreateBtn').click();
+        }
+    });
+
     $('#confirmCreateBtn').on('click', function() {
-        const name = $('#newResumeName').val().trim();
-        if (!name) {
+        const baseName = $('#newResumeName').val().trim();
+        if (!baseName) {
             alert('请输入简历名称');
             return;
         }
 
+        // 自动添加年份后缀
+        const name = baseName + '_' + currentYear;
+
         const data = {
             name: name,
-            target_company: $('#newResumeCompany').val().trim() || null,
-            target_position: $('#newResumePosition').val().trim() || null
+            target_company: null,
+            target_position: null
         };
 
         $.ajax({

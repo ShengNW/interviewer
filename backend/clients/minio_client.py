@@ -177,23 +177,41 @@ class MinIOClient:
             logger.error(f"Error deleting session files: {e}")
             return False
 
-    def get_presigned_url(self, object_name: str, expires_hours: int = 24) -> Optional[str]:
+    def get_presigned_url(
+        self,
+        object_name: str,
+        expires_hours: int = 24,
+        inline: bool = False,
+        content_type: Optional[str] = None
+    ) -> Optional[str]:
         """
         生成预签名URL，允许临时公开访问
 
         Args:
             object_name: 对象名称
             expires_hours: 过期时间（小时）
+            inline: 是否内联显示（用于PDF预览等）
+            content_type: 指定Content-Type（如 application/pdf）
 
         Returns:
             预签名URL，失败返回None
         """
         try:
             from datetime import timedelta
+            from urllib.parse import urlencode
+
+            # 构建响应头参数
+            response_headers = {}
+            if inline:
+                response_headers['response-content-disposition'] = 'inline'
+            if content_type:
+                response_headers['response-content-type'] = content_type
+
             url = self.client.presigned_get_object(
                 self.bucket_name,
                 object_name,
-                expires=timedelta(hours=expires_hours)
+                expires=timedelta(hours=expires_hours),
+                response_headers=response_headers if response_headers else None
             )
             return url
         except S3Error as e:

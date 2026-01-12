@@ -266,8 +266,13 @@ class RenderCVService:
             temp_object = f"resumes/temp/{resume_id}/preview_{timestamp}.pdf"
             minio_client.upload_file(temp_object, pdf_path)
 
-            # 生成预签名 URL
-            url = minio_client.get_presigned_url(temp_object, expires_hours)
+            # 生成预签名 URL（inline=True 使浏览器内联显示而非下载）
+            url = minio_client.get_presigned_url(
+                temp_object,
+                expires_hours,
+                inline=True,
+                content_type='application/pdf'
+            )
             return url
 
         finally:
@@ -293,7 +298,12 @@ class RenderCVService:
         pdf_object = f"resumes/{resume_id}/published.pdf"
 
         if minio_client.object_exists(pdf_object):
-            return minio_client.get_presigned_url(pdf_object, expires_hours)
+            return minio_client.get_presigned_url(
+                pdf_object,
+                expires_hours,
+                inline=True,
+                content_type='application/pdf'
+            )
 
         return None
 
