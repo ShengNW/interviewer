@@ -151,6 +151,19 @@
     margin-bottom: 1.5rem;
     color: #d1d5db;
 }
+
+/* 上传按钮样式 */
+.btn-outline-primary {
+    color: var(--accent-blue);
+    border: 2px solid var(--accent-blue);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
 </style>
 {% endblock %}
 
@@ -166,9 +179,14 @@
                 </h2>
                 <p class="text-muted mb-0">树状版本管理，轻松维护多个简历版本</p>
             </div>
-            <button class="btn btn-primary" onclick="showCreateModal()" style="border-radius: 10px; padding: 0.6rem 1.5rem;">
-                <i class="fas fa-plus me-2"></i>创建简历
-            </button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" onclick="showUploadModal()" style="border-radius: 10px; padding: 0.6rem 1.5rem;">
+                    <i class="fas fa-upload me-2"></i>上传简历
+                </button>
+                <button class="btn btn-primary" onclick="showCreateModal()" style="border-radius: 10px; padding: 0.6rem 1.5rem;">
+                    <i class="fas fa-plus me-2"></i>创建简历
+                </button>
+            </div>
         </div>
     </div>
 
@@ -316,6 +334,65 @@
         </div>
     </div>
 </div>
+
+<!-- 上传简历模态框 -->
+<div class="modal fade" id="uploadResumeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload me-2" style="color: var(--accent-blue);"></i>
+                    上传简历
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <!-- 初始上传界面 -->
+                <div id="uploadInitial">
+                    <form id="uploadResumeForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label mb-2">
+                                <i class="fas fa-file-pdf me-1"></i>
+                                选择 PDF 文件
+                            </label>
+                            <input type="file" class="form-control" id="resumeFile" name="resume" accept=".pdf" required>
+                            <small class="text-muted">支持 PDF 格式，系统将自动解析简历内容</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label mb-2">
+                                <i class="fas fa-file-signature me-1"></i>
+                                简历名称（可选）
+                            </label>
+                            <input type="text" class="form-control" id="uploadResumeName" name="name" placeholder="留空则使用文件名">
+                        </div>
+                    </form>
+                    <div class="alert alert-info" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3);">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>上传后系统将自动解析简历，提取信息并跳转到编辑页面供您检查和修正。</small>
+                    </div>
+                </div>
+
+                <!-- 上传进度界面 -->
+                <div id="uploadProgress" style="display: none;">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+                        <h6 class="mb-2" id="uploadStatusText">正在上传...</h6>
+                        <div class="progress mb-3" style="height: 8px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" id="uploadProgressBar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted" id="uploadStepText">准备上传文件</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-2" id="uploadModalFooter">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary btn-sm" id="confirmUploadBtn">
+                    <i class="fas fa-upload me-1"></i>开始上传
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -325,13 +402,14 @@ $(document).ready(function() {
     const createModal = new bootstrap.Modal(document.getElementById('createResumeModal'));
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
     const previewLoadingModal = new bootstrap.Modal(document.getElementById('previewLoadingModal'));
+    const uploadModal = new bootstrap.Modal(document.getElementById('uploadResumeModal'));
 
     let resumeToDelete = null;
 
     // 加载简历树
     loadResumeTrees();
 
-    // 创建简历
+    // ==================== 创建简历 ====================
     const currentYear = new Date().getFullYear();
 
     window.showCreateModal = function() {
@@ -387,6 +465,133 @@ $(document).ready(function() {
         });
     });
 
+    // ==================== 上传简历 ====================
+    window.showUploadModal = function() {
+        // 重置表单和状态
+        $('#uploadResumeForm')[0].reset();
+        $('#uploadInitial').show();
+        $('#uploadProgress').hide();
+        $('#uploadModalFooter').show();
+        $('#confirmUploadBtn').prop('disabled', false);
+        uploadModal.show();
+    };
+
+    $('#confirmUploadBtn').on('click', function() {
+        const fileInput = $('#resumeFile')[0];
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert('请选择PDF文件');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            alert('只支持PDF格式');
+            return;
+        }
+
+        // 开始上传
+        startUpload(file);
+    });
+
+    function startUpload(file) {
+        // 切换到进度界面
+        $('#uploadInitial').hide();
+        $('#uploadProgress').show();
+        $('#uploadModalFooter').hide();
+
+        const formData = new FormData();
+        formData.append('resume', file);
+
+        const customName = $('#uploadResumeName').val().trim();
+        if (customName) {
+            formData.append('name', customName);
+        }
+
+        // 更新进度
+        updateUploadProgress(10, '正在上传文件...');
+
+        $.ajax({
+            url: '/api/resumes/upload',
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            data: formData,
+            processData: false,
+            contentType: false,
+            timeout: 300000,  // 5分钟超时（PDF解析可能需要时间）
+            xhr: function() {
+                const xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 30);  // 上传占30%
+                        updateUploadProgress(percent, '正在上传文件...');
+                    }
+                });
+                return xhr;
+            },
+            beforeSend: function() {
+                updateUploadProgress(30, '文件已上传，正在解析 PDF...');
+
+                // 模拟解析进度（因为后端是同步处理）
+                let fakeProgress = 30;
+                window.uploadProgressInterval = setInterval(function() {
+                    fakeProgress += 5;
+                    if (fakeProgress < 90) {
+                        if (fakeProgress < 50) {
+                            updateUploadProgress(fakeProgress, '正在解析 PDF...');
+                        } else if (fakeProgress < 70) {
+                            updateUploadProgress(fakeProgress, '正在提取简历信息...');
+                        } else {
+                            updateUploadProgress(fakeProgress, '正在保存数据...');
+                        }
+                    }
+                }, 2000);
+            },
+            success: function(response) {
+                clearInterval(window.uploadProgressInterval);
+
+                if (response.code === 200) {
+                    updateUploadProgress(100, '解析完成！正在跳转...');
+
+                    showToast('success', response.message || '简历上传成功');
+
+                    // 跳转到详情页
+                    setTimeout(function() {
+                        uploadModal.hide();
+                        if (response.data.redirect_url) {
+                            window.location.href = response.data.redirect_url;
+                        } else if (response.data.resume && response.data.resume.id) {
+                            window.location.href = '/resumes/' + response.data.resume.id;
+                        } else {
+                            loadResumeTrees();
+                        }
+                    }, 1000);
+                } else {
+                    handleUploadError(response.message || '上传失败');
+                }
+            },
+            error: function(xhr) {
+                clearInterval(window.uploadProgressInterval);
+                const msg = xhr.responseJSON?.message || '网络错误，请重试';
+                handleUploadError(msg);
+            }
+        });
+    }
+
+    function updateUploadProgress(percent, text) {
+        $('#uploadProgressBar').css('width', percent + '%');
+        $('#uploadStepText').text(text);
+        if (percent >= 100) {
+            $('#uploadStatusText').text('完成！');
+        }
+    }
+
+    function handleUploadError(message) {
+        $('#uploadProgress').hide();
+        $('#uploadInitial').show();
+        $('#uploadModalFooter').show();
+        alert('上传失败：' + message);
+    }
+
     // 加载简历树
     function loadResumeTrees() {
         $.ajax({
@@ -415,10 +620,15 @@ $(document).ready(function() {
                 <div class="empty-state">
                     <i class="fas fa-folder-open"></i>
                     <h5>还没有简历</h5>
-                    <p class="mb-3">点击上方按钮创建你的第一份简历</p>
-                    <button class="btn btn-primary" onclick="showCreateModal()">
-                        <i class="fas fa-plus me-2"></i>创建简历
-                    </button>
+                    <p class="mb-3">创建新简历或上传已有的PDF简历</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-outline-primary" onclick="showUploadModal()">
+                            <i class="fas fa-upload me-2"></i>上传简历
+                        </button>
+                        <button class="btn btn-primary" onclick="showCreateModal()">
+                            <i class="fas fa-plus me-2"></i>创建简历
+                        </button>
+                    </div>
                 </div>
             `);
             return;

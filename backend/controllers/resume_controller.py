@@ -350,7 +350,18 @@ def get_resume_pdf(resume_id: str):
 @resume_bp.route('/api/resumes/upload', methods=['POST'])
 @require_auth
 def upload_resume():
-    """上传简历PDF并解析为结构化数据 - 需要登录"""
+    """
+    上传简历PDF并解析为结构化数据
+
+    流程：
+    1. 上传PDF文件
+    2. MinerU解析为Markdown
+    3. LLM提取结构化数据
+    4. 保存到 ResumeContent 表
+    5. 返回简历ID，前端跳转到详情页供用户校对
+
+    需要登录
+    """
     logger.debug("Uploading resume")
 
     try:
@@ -369,9 +380,15 @@ def upload_resume():
             return ApiResponse.bad_request('只支持PDF格式')
 
         # 获取元数据
-        name = request.form.get('name', '').strip() or file.filename
+        name = request.form.get('name', '').strip() or file.filename.rsplit('.', 1)[0]
         company = request.form.get('company', '').strip() or None
         position = request.form.get('position', '').strip() or None
+
+        # 自动添加年份后缀（与创建简历保持一致）
+        from datetime import datetime
+        current_year = datetime.now().year
+        if not name.endswith(f'_{current_year}'):
+            name = f'{name}_{current_year}'
 
         # 保存临时文件
         temp_path = _save_temp_file(file)
@@ -383,17 +400,11 @@ def upload_resume():
             if not markdown_content:
                 return ApiResponse.internal_error('PDF解析失败，请稍后重试')
 
-            # 提取结构化数据
+            # 提取结构化数据（新格式，与 ResumeContent 一致）
             resume_data = _extract_resume_data(markdown_content)
 
             if not resume_data:
                 return ApiResponse.internal_error('简历数据提取失败')
-
-            # 添加元数据
-            if company:
-                resume_data['company'] = company
-            if position:
-                resume_data['position'] = position
 
             # 创建简历记录
             try:
@@ -409,20 +420,19 @@ def upload_resume():
                 # 简历名称重复
                 return ApiResponse.bad_request(str(e))
 
-            # 保存到MinIO
-            success = upload_resume_data(resume_data, resume.id)
+            # 保存解析数据到 ResumeContent
+            _save_parsed_content(resume.id, resume_data)
 
-            if not success:
-                # 如果MinIO保存失败，删除数据库记录
-                ResumeService.delete_resume(resume.id)
-                return ApiResponse.internal_error('简历保存失败')
+            # 也保存到MinIO作为原始数据备份（可选）
+            upload_resume_data(resume_data, resume.id)
 
             return ApiResponse.success(
                 data={
                     'resume': ResumeService.to_dict(resume),
-                    'resume_data': resume_data
+                    'resume_data': resume_data,
+                    'redirect_url': f'/resumes/{resume.id}'  # 提示前端跳转到详情页
                 },
-                message='简历上传成功'
+                message='简历上传成功，请检查并修正解析结果'
             )
 
         finally:
@@ -666,3 +676,40 @@ def _extract_resume_data(markdown_content):
     from backend.services.resume_parser import get_resume_parser
     resume_parser = get_resume_parser()
     return resume_parser.extract_resume_data(markdown_content)
+
+
+def _save_parsed_content(resume_id: str, resume_data: dict):
+    """
+    将解析出的结构化数据保存到 ResumeContent 表
+
+    Args:
+        resume_id: 简历ID
+        resume_data: 解析出的结构化数据
+    """
+    content = ResumeContent.get_or_none(ResumeContent.resume_id == resume_id)
+
+    if not content:
+        logger.warning(f"ResumeContent not found for {resume_id}, creating new one")
+        import uuid
+        content = ResumeContent.create(
+            id=str(uuid.uuid4()),
+            resume_id=resume_id
+        )
+
+    # 更新基本字段
+    content.full_name = resume_data.get('full_name', '')
+    content.email = resume_data.get('email', '')
+    content.phone = resume_data.get('phone', '')
+    content.location = resume_data.get('location', '')
+    content.website = resume_data.get('website', '')
+    content.summary = resume_data.get('summary', '')
+
+    # 更新 JSON 字段
+    content.education = json.dumps(resume_data.get('education', []), ensure_ascii=False)
+    content.experience = json.dumps(resume_data.get('experience', []), ensure_ascii=False)
+    content.projects = json.dumps(resume_data.get('projects', []), ensure_ascii=False)
+    content.skills = json.dumps(resume_data.get('skills', []), ensure_ascii=False)
+    content.certifications = json.dumps(resume_data.get('certifications', []), ensure_ascii=False)
+
+    content.save()
+    logger.info(f"Saved parsed content to ResumeContent for resume: {resume_id}")

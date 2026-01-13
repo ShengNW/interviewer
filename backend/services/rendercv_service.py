@@ -19,17 +19,18 @@ logger = get_logger(__name__)
 
 # RenderCV YAML 模板
 # 注意：RenderCV 对 phone 有严格格式验证，需要国际格式如 +86 138 0000 0000
+# 日期格式要求：YYYY-MM 或 YYYY，空值用 present 表示
 RENDERCV_TEMPLATE = """# yaml-language-server: $schema=https://raw.githubusercontent.com/rendercv/rendercv/refs/tags/v2.3/schema.json
 cv:
   name: "{{ full_name or '未命名' }}"
 {% if location %}
   location: "{{ location }}"
 {% endif %}
-{% if email %}
+{% if email and '@' in email %}
   email: {{ email }}
 {% endif %}
-{% if phone and phone | length > 6 %}
-  phone: "+86 {{ phone | replace('-', ' ') | replace(' ', ' ') }}"
+{% if phone and phone | length == 11 and phone.isdigit() %}
+  phone: "+86 {{ phone[:3] }} {{ phone[3:7] }} {{ phone[7:] }}"
 {% endif %}
 {% if website %}
   website: {{ website }}
@@ -37,61 +38,77 @@ cv:
   sections:
 {% if summary %}
     个人简介:
-      - "{{ summary }}"
+      - "{{ summary | replace('"', "'") }}"
 {% endif %}
 {% if education %}
     教育经历:
 {% for edu in education %}
-      - institution: "{{ edu.school or '' }}"
-        area: "{{ edu.major or '' }}"
-        degree: "{{ edu.degree or '' }}"
-        start_date: {{ edu.start or '' }}
-        end_date: {{ edu.end or 'present' }}
+{% if edu.school %}
+      - institution: "{{ edu.school | replace('"', "'") }}"
+        area: "{{ edu.major | default('') | replace('"', "'") }}"
+        degree: "{{ edu.degree | default('') | replace('"', "'") }}"
+{% if edu.start %}
+        start_date: "{{ edu.start }}"
+{% endif %}
+        end_date: "{{ edu.end | default('present') }}"
 {% if edu.gpa %}
         highlights:
           - "GPA: {{ edu.gpa }}"
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}
 {% if experience %}
     工作经历:
 {% for exp in experience %}
-      - company: "{{ exp.company or '' }}"
-        position: "{{ exp.title or '' }}"
-        start_date: {{ exp.start or '' }}
-        end_date: {{ exp.end or 'present' }}
+{% if exp.company %}
+      - company: "{{ exp.company | replace('"', "'") }}"
+        position: "{{ exp.title | default('') | replace('"', "'") }}"
+{% if exp.start %}
+        start_date: "{{ exp.start }}"
+{% endif %}
+        end_date: "{{ exp.end | default('present') }}"
 {% if exp.highlights %}
         highlights:
 {% for h in exp.highlights %}
-          - "{{ h }}"
+          - "{{ h | replace('"', "'") }}"
 {% endfor %}
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}
 {% if projects %}
     项目经历:
 {% for proj in projects %}
-      - name: "{{ proj.name or '' }}"
-        summary: "{{ proj.description or '' }}"
+{% if proj.name %}
+      - name: "{{ proj.name | replace('"', "'") }}"
+{% if proj.description %}
+        summary: "{{ proj.description | replace('"', "'") }}"
+{% endif %}
 {% if proj.highlights %}
         highlights:
 {% for h in proj.highlights %}
-          - "{{ h }}"
+          - "{{ h | replace('"', "'") }}"
 {% endfor %}
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}
 {% if skills %}
     技能特长:
 {% for skill in skills %}
-      - label: "{{ skill.category or '' }}"
-        details: "{{ skill['items'] | join(', ') if skill['items'] else '' }}"
+{% if skill['items'] %}
+      - label: "{{ skill.category | default('技能') | replace('"', "'") }}"
+        details: "{{ skill['items'] | join(', ') }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 {% if certifications %}
     证书资质:
 {% for cert in certifications %}
-      - bullet: "{{ cert.name }}{% if cert.issuer %} - {{ cert.issuer }}{% endif %}{% if cert.date %} ({{ cert.date }}){% endif %}"
+{% if cert.name %}
+      - bullet: "{{ cert.name | replace('"', "'") }}{% if cert.issuer %} - {{ cert.issuer | replace('"', "'") }}{% endif %}{% if cert.date %} ({{ cert.date }}){% endif %}"
+{% endif %}
 {% endfor %}
 {% endif %}
 design:
@@ -107,12 +124,27 @@ class RenderCVService:
     def __init__(self):
         self.template = Template(RENDERCV_TEMPLATE)
 
+    def _clean_phone(self, phone: str) -> str:
+        """清理电话号码，只保留数字"""
+        if not phone:
+            return ""
+        # 只保留数字
+        digits = ''.join(c for c in phone if c.isdigit())
+        # 如果是11位中国手机号，返回
+        if len(digits) == 11 and digits.startswith('1'):
+            return digits
+        # 如果有+86前缀（13位），去掉前缀
+        if len(digits) == 13 and digits.startswith('86'):
+            return digits[2:]
+        # 不是有效手机号，返回空
+        return ""
+
     def content_to_dict(self, content: ResumeContent) -> Dict[str, Any]:
         """将 ResumeContent 转换为字典（解析 JSON 字段）"""
         return {
             'full_name': content.full_name,
             'email': content.email,
-            'phone': content.phone,
+            'phone': self._clean_phone(content.phone),  # 清理电话号码
             'location': content.location,
             'website': content.website,
             'summary': content.summary,
@@ -150,6 +182,7 @@ class RenderCVService:
                 f.write(yaml_content)
 
             logger.info(f"RenderCV: generating PDF from {yaml_path}")
+            logger.debug(f"YAML content:\n{yaml_content[:500]}...")
 
             # 调用 RenderCV CLI
             result = subprocess.run(
@@ -160,9 +193,18 @@ class RenderCVService:
                 timeout=120  # 2分钟超时
             )
 
+            # 记录完整输出用于调试
+            if result.stdout:
+                logger.debug(f"RenderCV stdout: {result.stdout}")
+            if result.stderr:
+                logger.debug(f"RenderCV stderr: {result.stderr}")
+
             if result.returncode != 0:
-                logger.error(f"RenderCV failed: {result.stderr}")
-                raise RuntimeError(f"PDF 渲染失败: {result.stderr}")
+                error_msg = result.stderr or result.stdout or "未知错误"
+                logger.error(f"RenderCV failed (code {result.returncode}): {error_msg}")
+                # 也输出YAML内容帮助调试
+                logger.error(f"Failed YAML:\n{yaml_content}")
+                raise RuntimeError(f"PDF 渲染失败: {error_msg}")
 
             # 查找生成的 PDF 文件
             # RenderCV 会在 rendercv_output 目录下生成 PDF
@@ -178,6 +220,13 @@ class RenderCVService:
                         pdf_path = os.path.join(root, f)
                         logger.info(f"RenderCV: PDF generated at {pdf_path}")
                         return pdf_path
+
+            # 如果没找到PDF，列出目录内容帮助调试
+            all_files = []
+            for root, dirs, files in os.walk(work_dir):
+                for f in files:
+                    all_files.append(os.path.join(root, f))
+            logger.error(f"No PDF found. Files in work_dir: {all_files}")
 
             raise RuntimeError("未找到生成的 PDF 文件")
 
