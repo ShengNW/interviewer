@@ -3,7 +3,7 @@ flask==3.0.0
 python-dotenv==1.0.0
 
 # 数据验证
-pydantic==2.5.0
+pydantic>=2.5.0
 
 # AI/LLM
 dashscope==1.20.0
@@ -20,6 +20,9 @@ requests==2.31.0
 # PDF生成
 reportlab==4.0.7
 pillow==10.1.0
+
+# 简历渲染
+rendercv[full]>=2.3
 
 uvicorn==0.35.0
 python-jose[cryptography]==3.5.0

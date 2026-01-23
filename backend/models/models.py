@@ -38,18 +38,67 @@ class BaseModel(Model):
 
 
 class Resume(BaseModel):
-    """简历模型 - 独立于面试间"""
+    """简历模型 - 支持树状版本管理"""
     id = CharField(primary_key=True)
-    name = CharField()  # 简历名称
-    owner_address = CharField(max_length=64)  # 钱包地址
-    file_name = CharField(null=True)  # 原始文件名
-    file_size = IntegerField(null=True)  # 文件大小（字节）
-    company = CharField(null=True)  # 目标公司
-    position = CharField(null=True)  # 目标职位
-    status = CharField(default='active')  # active, deleted
+
+    # 树状结构字段
+    parent_id = CharField(null=True, index=True)  # 父节点ID，根节点为null
+    root_id = CharField(index=True)               # 根节点ID（方便查询整棵树）
+    depth = IntegerField(default=0)               # 树深度，根节点为0
+
+    # 基本信息
+    name = CharField()  # 简历名称（根节点用户自定义，子节点用时间戳）
+    owner_address = CharField(max_length=64, index=True)  # 钱包地址
+
+    # 状态：draft(编辑中) / published(已发布) / deleted(已删除)
+    status = CharField(default='draft')
+
+    # 元数据
+    target_company = CharField(null=True)   # 目标公司
+    target_position = CharField(null=True)  # 目标职位
+
+    # 兼容旧字段（后续迁移后可删除）
+    file_name = CharField(null=True)
+    file_size = IntegerField(null=True)
+    company = CharField(null=True)
+    position = CharField(null=True)
 
     class Meta:
         table_name = 'resumes'
+        indexes = (
+            (('owner_address', 'status'), False),
+            (('root_id',), False),
+        )
+
+    def reload(self):
+        """重新从数据库加载数据"""
+        fresh = Resume.get_by_id(self.id)
+        for field in self._meta.sorted_fields:
+            setattr(self, field.name, getattr(fresh, field.name))
+
+
+class ResumeContent(BaseModel):
+    """简历内容 - 结构化表单数据"""
+    id = CharField(primary_key=True)
+    resume_id = CharField(unique=True, index=True)  # 一对一关联 Resume
+
+    # 基本信息
+    full_name = CharField(null=True)              # 姓名
+    email = CharField(null=True)
+    phone = CharField(null=True)
+    location = CharField(null=True)               # 所在地
+    website = CharField(null=True)                # 个人网站/GitHub
+    summary = TextField(null=True)                # 个人简介
+
+    # 复杂字段存 JSON
+    education = TextField(null=True)              # JSON: [{school, degree, major, start, end, gpa}]
+    experience = TextField(null=True)             # JSON: [{company, title, start, end, highlights[]}]
+    projects = TextField(null=True)               # JSON: [{name, description, tech[], highlights[]}]
+    skills = TextField(null=True)                 # JSON: [{category, items[]}]
+    certifications = TextField(null=True)         # JSON: [{name, issuer, date}]
+
+    class Meta:
+        table_name = 'resume_contents'
 
 
 class Room(BaseModel):
@@ -128,7 +177,7 @@ def create_tables() -> None:
     if not database.is_closed():
         database.close()
     database.connect()
-    database.create_tables([Resume, Room, Session, Round, QuestionAnswer, RoundCompletion], safe=True)
+    database.create_tables([Resume, ResumeContent, Room, Session, Round, QuestionAnswer, RoundCompletion], safe=True)
     database.close()
 
 

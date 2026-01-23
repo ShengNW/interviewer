@@ -177,23 +177,41 @@ class MinIOClient:
             logger.error(f"Error deleting session files: {e}")
             return False
 
-    def get_presigned_url(self, object_name: str, expires_hours: int = 24) -> Optional[str]:
+    def get_presigned_url(
+        self,
+        object_name: str,
+        expires_hours: int = 24,
+        inline: bool = False,
+        content_type: Optional[str] = None
+    ) -> Optional[str]:
         """
         生成预签名URL，允许临时公开访问
 
         Args:
             object_name: 对象名称
             expires_hours: 过期时间（小时）
+            inline: 是否内联显示（用于PDF预览等）
+            content_type: 指定Content-Type（如 application/pdf）
 
         Returns:
             预签名URL，失败返回None
         """
         try:
             from datetime import timedelta
+            from urllib.parse import urlencode
+
+            # 构建响应头参数
+            response_headers = {}
+            if inline:
+                response_headers['response-content-disposition'] = 'inline'
+            if content_type:
+                response_headers['response-content-type'] = content_type
+
             url = self.client.presigned_get_object(
                 self.bucket_name,
                 object_name,
-                expires=timedelta(hours=expires_hours)
+                expires=timedelta(hours=expires_hours),
+                response_headers=response_headers if response_headers else None
             )
             return url
         except S3Error as e:
@@ -379,3 +397,157 @@ def download_pdf_report_url(room_id: str, session_id: str, round_index: int, exp
     """
     object_name = f"rooms/{room_id}/sessions/{session_id}/reports/report_{round_index}.pdf"
     return minio_client.get_presigned_url(object_name, expires_hours)
+
+
+# ==================== 简历树状管理扩展 ====================
+
+def delete_resume_folder(resume_id: str) -> int:
+    """
+    删除简历的所有文件（整个文件夹）
+
+    Args:
+        resume_id: 简历ID
+
+    Returns:
+        删除的文件数量
+    """
+    prefix = f"resumes/{resume_id}/"
+    objects = minio_client.list_objects(prefix)
+    deleted_count = 0
+
+    for obj_name in objects:
+        if minio_client.delete_object(obj_name):
+            deleted_count += 1
+
+    logger.info(f"Deleted {deleted_count} files for resume {resume_id}")
+    return deleted_count
+
+
+def copy_resume_files(source_resume_id: str, target_resume_id: str) -> int:
+    """
+    复制简历的所有文件到新位置（用于 fork）
+
+    Args:
+        source_resume_id: 源简历ID
+        target_resume_id: 目标简历ID
+
+    Returns:
+        复制的文件数量
+    """
+    from minio.commonconfig import CopySource
+
+    prefix = f"resumes/{source_resume_id}/"
+    objects = minio_client.list_objects(prefix)
+    copied_count = 0
+
+    for obj_name in objects:
+        # 计算目标路径
+        relative_path = obj_name[len(prefix):]
+        target_name = f"resumes/{target_resume_id}/{relative_path}"
+
+        try:
+            # 使用 MinIO 的 copy_object
+            minio_client.client.copy_object(
+                minio_client.bucket_name,
+                target_name,
+                CopySource(minio_client.bucket_name, obj_name)
+            )
+            copied_count += 1
+            logger.debug(f"Copied {obj_name} to {target_name}")
+        except Exception as e:
+            logger.error(f"Failed to copy {obj_name}: {e}")
+
+    logger.info(f"Copied {copied_count} files from resume {source_resume_id} to {target_resume_id}")
+    return copied_count
+
+
+def upload_resume_content(content_dict: Dict[str, Any], resume_id: str) -> bool:
+    """
+    上传简历内容到 MinIO（用于备份）
+
+    Args:
+        content_dict: 简历内容字典
+        resume_id: 简历ID
+
+    Returns:
+        是否上传成功
+    """
+    object_name = f"resumes/{resume_id}/content.json"
+    return minio_client.upload_json(object_name, content_dict)
+
+
+def download_resume_content(resume_id: str) -> Optional[Dict[str, Any]]:
+    """
+    从 MinIO 下载简历内容
+
+    Args:
+        resume_id: 简历ID
+
+    Returns:
+        简历内容字典，如果不存在返回 None
+    """
+    object_name = f"resumes/{resume_id}/content.json"
+    return minio_client.download_json(object_name)
+
+
+def upload_resume_pdf(pdf_path: str, resume_id: str) -> bool:
+    """
+    上传简历 PDF 到 MinIO
+
+    Args:
+        pdf_path: PDF 文件路径
+        resume_id: 简历ID
+
+    Returns:
+        是否上传成功
+    """
+    object_name = f"resumes/{resume_id}/published.pdf"
+    return minio_client.upload_file(object_name, pdf_path)
+
+
+def get_resume_pdf_url(resume_id: str, expires_hours: int = 24) -> Optional[str]:
+    """
+    获取简历 PDF 的预签名 URL
+
+    Args:
+        resume_id: 简历ID
+        expires_hours: URL有效期（小时）
+
+    Returns:
+        预签名URL，如果文件不存在返回 None
+    """
+    object_name = f"resumes/{resume_id}/published.pdf"
+    if minio_client.object_exists(object_name):
+        return minio_client.get_presigned_url(object_name, expires_hours)
+    return None
+
+
+def cleanup_temp_previews(max_age_hours: int = 24) -> int:
+    """
+    清理过期的临时预览文件
+
+    Args:
+        max_age_hours: 最大保留时间（小时）
+
+    Returns:
+        删除的文件数量
+    """
+    from datetime import datetime, timedelta
+
+    prefix = "resumes/temp/"
+    objects = minio_client.client.list_objects(
+        minio_client.bucket_name,
+        prefix=prefix,
+        recursive=True
+    )
+
+    deleted_count = 0
+    cutoff_time = datetime.now() - timedelta(hours=max_age_hours)
+
+    for obj in objects:
+        if obj.last_modified and obj.last_modified.replace(tzinfo=None) < cutoff_time:
+            if minio_client.delete_object(obj.object_name):
+                deleted_count += 1
+
+    logger.info(f"Cleaned up {deleted_count} expired preview files")
+    return deleted_count

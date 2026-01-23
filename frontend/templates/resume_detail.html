@@ -1,122 +1,554 @@
 {% extends "base_user.html" %}
 
-{% block title %}简历详情 - 夜莺面试官{% endblock %}
+{% block title %}编辑简历 - 夜莺面试官{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 全屏分栏布局 */
+.split-container {
+    display: flex;
+    height: calc(100vh - 140px);
+    margin-top: 20px;
+}
+
+/* 左侧编辑区 */
+.editor-pane {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 1rem;
+    border-right: 1px solid #e5e7eb;
+}
+
+/* 右侧预览区 */
+.preview-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding-left: 1rem;
+    background: #f8fafc;
+}
+
+/* 分隔条 - 可拖动调整宽度 */
+.split-divider {
+    width: 6px;
+    background: #e5e7eb;
+    cursor: col-resize;
+    transition: background 0.2s;
+}
+
+.split-divider:hover {
+    background: var(--accent-blue);
+}
+
+/* 顶部工具栏 */
+.toolbar {
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 70px;
+    z-index: 100;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* 状态徽章 */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.draft {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.status-badge.published {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+/* 保存状态指示器 */
+.save-indicator {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+}
+
+.save-indicator.saving {
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--accent-blue);
+}
+
+.save-indicator.saved {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.save-indicator.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* 工具栏按钮 */
+.toolbar-btn {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.toolbar-btn:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.toolbar-btn.primary {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+.toolbar-btn.primary:hover {
+    background: #5a6fd6;
+}
+
+.toolbar-btn.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.toolbar-btn.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* 表单区块 */
+.form-section {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.form-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.form-section-title i {
+    margin-right: 0.5rem;
+    color: var(--accent-blue);
+}
+
+/* 动态列表项 */
+.list-item {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+}
+
+.list-item .remove-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: none;
+    border-radius: 6px;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.7rem;
+}
+
+.add-item-btn {
+    background: rgba(102, 126, 234, 0.05);
+    color: var(--accent-blue);
+    border: 1px dashed rgba(102, 126, 234, 0.3);
+    border-radius: 8px;
+    padding: 0.5rem;
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.add-item-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: var(--accent-blue);
+}
+
+/* 预览区头部 */
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 8px 8px 0 0;
+}
+
+.preview-header h6 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.preview-status {
+    font-size: 0.75rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-status i {
+    font-size: 0.7rem;
+}
+
+.preview-status.loading {
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--accent-blue);
+}
+
+.preview-status.ready {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.preview-status.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* PDF 预览容器 */
+.pdf-container {
+    flex: 1;
+    background: #525659;
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.pdf-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.pdf-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #9ca3af;
+    text-align: center;
+    padding: 2rem;
+}
+
+.pdf-placeholder i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #6b7280;
+}
+
+/* 加载动画 */
+.pdf-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(82, 86, 89, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.pdf-loading .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* 响应式 */
+@media (max-width: 992px) {
+    .split-container {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .editor-pane {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+        padding-right: 0;
+        padding-bottom: 1rem;
+        max-height: 60vh;
+    }
+
+    .preview-pane {
+        padding-left: 0;
+        padding-top: 1rem;
+        min-height: 50vh;
+    }
+
+    .split-divider {
+        display: none;
+    }
+}
+
+/* 下拉菜单 */
+.dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.dropdown-item i {
+    width: 1.2rem;
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4">
-    <!-- 返回按钮和标题 -->
-    <div class="row mb-4" style="margin-top: 40px;">
-        <div class="col-12">
-            <a href="{{ url_for('room.resumes_list') }}" class="btn btn-outline-secondary btn-sm mb-3" style="border-radius: 8px;">
-                <i class="fas fa-arrow-left me-2"></i>返回简历列表
+    <!-- 顶部工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <a href="{{ url_for('room.resumes_list') }}" class="toolbar-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span class="d-none d-sm-inline">返回</span>
             </a>
-            <h2 class="fw-bold mb-1" style="font-size: 2rem;">
-                <i class="fas fa-file-alt me-3" style="color: var(--accent-blue);"></i>
-                {{ resume.name }}
-            </h2>
-            <p class="text-muted mb-0">
-                <i class="fas fa-clock me-1"></i>
-                创建于 {{ resume.created_at[:19]|replace('T', ' ') }}
-            </p>
-        </div>
-    </div>
-
-    <!-- 简历信息卡片 -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fas fa-info-circle me-2" style="color: var(--accent-blue);"></i>
-                        简历信息
-                    </h5>
-                    <div class="d-flex align-items-center gap-2">
-                        <button class="btn btn-sm" id="renameResumeBtn" style="background: rgba(102, 126, 234, 0.1); color: var(--accent-blue); border: none; padding: 0.375rem 0.75rem; border-radius: 8px;">
-                            <i class="fas fa-edit me-1"></i>重命名
-                        </button>
-                        <button class="btn btn-sm" id="deleteResumeBtn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; padding: 0.375rem 0.75rem; border-radius: 8px;">
-                            <i class="fas fa-trash me-1"></i>删除
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted mb-1" style="font-size: 0.9rem;">文件名</label>
-                            <p class="mb-0 fw-bold">
-                                <i class="fas fa-file-pdf me-2" style="color: #ef4444;"></i>
-                                {{ resume.file_name or '未知' }}
-                            </p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted mb-1" style="font-size: 0.9rem;">文件大小</label>
-                            <p class="mb-0 fw-bold">
-                                <i class="fas fa-database me-2" style="color: var(--accent-purple);"></i>
-                                {{ (resume.file_size / 1024) | round(2) if resume.file_size else 0 }} KB
-                            </p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted mb-1" style="font-size: 0.9rem;">关联面试间</label>
-                            <p class="mb-0 fw-bold">
-                                <i class="fas fa-door-open me-2" style="color: var(--accent-blue);"></i>
-                                {{ resume.linked_rooms_count or 0 }} 个
-                            </p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted mb-1" style="font-size: 0.9rem;">状态</label>
-                            <p class="mb-0 fw-bold">
-                                <i class="fas fa-circle me-2" style="color: var(--accent-green); font-size: 0.6rem;"></i>
-                                激活
-                            </p>
-                        </div>
-                    </div>
-                </div>
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="mb-0 fw-bold" style="font-size: 1.1rem;">
+                    <i class="fas fa-file-alt me-1" style="color: var(--accent-blue);"></i>
+                    {{ resume.name }}
+                </h5>
+                <span class="status-badge {{ 'published' if resume.status == 'published' else 'draft' }}" id="statusBadge">
+                    {{ '已发布' if resume.status == 'published' else '编辑中' }}
+                </span>
+                {% if resume.depth > 0 %}
+                <span class="text-muted small">L{{ resume.depth }}</span>
+                {% endif %}
             </div>
         </div>
-    </div>
+        <div class="toolbar-right">
+            <span class="save-indicator saved" id="saveIndicator">
+                <i class="fas fa-check me-1"></i>已保存
+            </span>
 
-    <!-- 简历内容 -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-file-text me-2" style="color: var(--accent-green);"></i>
-                        简历内容
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if resume_data and resume_data.get('markdown_content') %}
-                    <div class="resume-content" style="white-space: pre-wrap; font-family: monospace; background: #f8f9fa; padding: 1.5rem; border-radius: 8px; line-height: 1.6;">{{ resume_data.markdown_content }}</div>
-                    {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
-                        <p class="text-muted">简历内容不可用</p>
-                    </div>
+            <button class="toolbar-btn" onclick="saveContent()" title="保存">
+                <i class="fas fa-save"></i>
+                <span class="d-none d-md-inline">保存</span>
+            </button>
+
+            <button class="toolbar-btn primary" onclick="refreshPreview()" title="刷新预览">
+                <i class="fas fa-sync-alt"></i>
+                <span class="d-none d-md-inline">刷新预览</span>
+            </button>
+
+            <!-- 更多操作下拉 -->
+            <div class="dropdown">
+                <button class="toolbar-btn dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li id="publishActionItem">
+                        {% if resume.status == 'draft' %}
+                        <a class="dropdown-item" href="#" onclick="publishResume(); return false;">
+                            <i class="fas fa-upload me-2" style="color: #10b981;"></i>发布简历
+                        </a>
+                        {% else %}
+                        <a class="dropdown-item" href="#" onclick="unpublishResume(); return false;">
+                            <i class="fas fa-undo me-2" style="color: #f59e0b;"></i>取消发布
+                        </a>
+                        {% endif %}
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="downloadPdf(); return false;">
+                            <i class="fas fa-download me-2" style="color: var(--accent-blue);"></i>下载 PDF
+                        </a>
+                    </li>
+                    {% if resume.depth < 4 %}
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="forkResume(); return false;">
+                            <i class="fas fa-code-branch me-2" style="color: var(--accent-purple);"></i>创建子版本
+                        </a>
+                    </li>
                     {% endif %}
-                </div>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="#" onclick="deleteResume(); return false;">
+                            <i class="fas fa-trash me-2"></i>删除简历
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
 
-    <!-- 结构化数据（如果有） -->
-    {% if resume_data and resume_data.get('structured_data') %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-sitemap me-2" style="color: var(--accent-purple);"></i>
-                        结构化数据
+    <!-- 分栏主体 -->
+    <div class="split-container">
+        <!-- 左侧：表单编辑区 -->
+        <div class="editor-pane" id="editorPane">
+            <form id="resumeForm">
+                <!-- 基本信息 -->
+                <div class="form-section">
+                    <h5 class="form-section-title">
+                        <i class="fas fa-user"></i>基本信息
                     </h5>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control form-control-sm" id="fullName" name="full_name" placeholder="姓名 *">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="email" class="form-control form-control-sm" id="email" name="email" placeholder="邮箱">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="tel" class="form-control form-control-sm" id="phone" name="phone" placeholder="电话">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control form-control-sm" id="location" name="location" placeholder="所在地">
+                        </div>
+                        <div class="col-12">
+                            <input type="url" class="form-control form-control-sm" id="website" name="website" placeholder="个人网站 (可选)">
+                        </div>
+                        <div class="col-12">
+                            <textarea class="form-control form-control-sm" id="summary" name="summary" rows="2" placeholder="个人简介..."></textarea>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <pre class="mb-0" style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; overflow-x: auto;">{{ resume_data.structured_data | tojson(indent=2) }}</pre>
+
+                <!-- 教育经历 -->
+                <div class="form-section">
+                    <h5 class="form-section-title">
+                        <i class="fas fa-graduation-cap"></i>教育经历
+                    </h5>
+                    <div id="educationList"></div>
+                    <button type="button" class="add-item-btn" onclick="addEducation()">
+                        <i class="fas fa-plus me-1"></i>添加教育经历
+                    </button>
+                </div>
+
+                <!-- 工作经历 -->
+                <div class="form-section">
+                    <h5 class="form-section-title">
+                        <i class="fas fa-briefcase"></i>工作经历
+                    </h5>
+                    <div id="experienceList"></div>
+                    <button type="button" class="add-item-btn" onclick="addExperience()">
+                        <i class="fas fa-plus me-1"></i>添加工作经历
+                    </button>
+                </div>
+
+                <!-- 项目经历 -->
+                <div class="form-section">
+                    <h5 class="form-section-title">
+                        <i class="fas fa-project-diagram"></i>项目经历
+                    </h5>
+                    <div id="projectsList"></div>
+                    <button type="button" class="add-item-btn" onclick="addProject()">
+                        <i class="fas fa-plus me-1"></i>添加项目
+                    </button>
+                </div>
+
+                <!-- 技能特长 -->
+                <div class="form-section">
+                    <h5 class="form-section-title">
+                        <i class="fas fa-tools"></i>技能特长
+                    </h5>
+                    <div id="skillsList"></div>
+                    <button type="button" class="add-item-btn" onclick="addSkill()">
+                        <i class="fas fa-plus me-1"></i>添加技能类别
+                    </button>
+                </div>
+
+                <!-- 证书资质 -->
+                <div class="form-section">
+                    <h5 class="form-section-title">
+                        <i class="fas fa-certificate"></i>证书资质
+                    </h5>
+                    <div id="certificationsList"></div>
+                    <button type="button" class="add-item-btn" onclick="addCertification()">
+                        <i class="fas fa-plus me-1"></i>添加证书
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 分隔条 -->
+        <div class="split-divider" id="splitDivider"></div>
+
+        <!-- 右侧：PDF 预览区 -->
+        <div class="preview-pane" id="previewPane">
+            <div class="preview-header">
+                <h6><i class="fas fa-file-pdf me-2"></i>PDF 预览</h6>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="preview-status ready" id="previewStatus">
+                        <i class="fas fa-check"></i>
+                    </span>
+                    <label class="form-check form-switch mb-0" style="font-size: 0.8rem;">
+                        <input class="form-check-input" type="checkbox" id="autoPreviewToggle" checked>
+                        <span class="form-check-label">自动预览</span>
+                    </label>
+                </div>
+            </div>
+            <div class="pdf-container" id="pdfContainer">
+                <!-- 初始占位 -->
+                <div class="pdf-placeholder" id="pdfPlaceholder">
+                    <i class="fas fa-file-pdf"></i>
+                    <p>点击「刷新预览」生成 PDF</p>
+                    <small class="text-muted">或开启自动预览，编辑后自动更新</small>
+                </div>
+                <!-- PDF iframe -->
+                <iframe class="pdf-iframe" id="pdfIframe" style="display: none;"></iframe>
+                <!-- 加载中 -->
+                <div class="pdf-loading" id="pdfLoading" style="display: none;">
+                    <div class="spinner-border text-light"></div>
+                    <span>正在生成 PDF...</span>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
 
 <!-- 删除确认模态框 -->
@@ -131,159 +563,475 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="mb-0">确定要删除这份简历吗？此操作不可恢复。</p>
+                <p>确定要删除这份简历吗？</p>
+                <div class="alert alert-warning" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <small>删除将同时删除所有子版本，此操作不可恢复！</small>
+                </div>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>取消
-                </button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
-                    <i class="fas fa-trash me-1"></i>确认删除
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
             </div>
         </div>
     </div>
 </div>
-
-<!-- 重命名模态框 -->
-<div class="modal fade" id="renameModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title">
-                    <i class="fas fa-edit me-2" style="color: var(--accent-blue);"></i>
-                    重命名简历
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="renameForm">
-                    <div class="mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-file-signature me-1"></i>
-                            新名称 <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" class="form-control" id="newResumeName" placeholder="请输入新的简历名称" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>取消
-                </button>
-                <button type="button" class="btn btn-primary" id="confirmRenameBtn">
-                    <i class="fas fa-check me-1"></i>确认
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-.card {
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.card-header {
-    background: rgba(102, 126, 234, 0.02);
-    border-bottom: 1px solid var(--border-color);
-    padding: 1rem 1.5rem;
-}
-
-.resume-content {
-    max-height: 600px;
-    overflow-y: auto;
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    const renameModal = new bootstrap.Modal(document.getElementById('renameModal'));
     const resumeId = '{{ resume.id }}';
-    const resumeName = {{ resume.name | tojson | safe }};
-    const linkedRooms = {{ resume.linked_rooms | tojson | safe }} || [];
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
 
-    // 重命名按钮点击
-    $('#renameResumeBtn').on('click', function() {
-        $('#newResumeName').val(resumeName);
-        renameModal.show();
-    });
+    let saveTimeout = null;
+    let previewTimeout = null;
+    let currentStatus = '{{ resume.status }}';
+    let currentPreviewUrl = null;
+    const AUTO_PREVIEW_DELAY = 3000; // 3秒后自动预览
 
-    // 删除按钮点击
-    $('#deleteResumeBtn').on('click', function() {
-        let message = `确定要删除简历"${resumeName}"吗？`;
-        if (linkedRooms && linkedRooms.length > 0) {
-            message += `\n\n⚠️ 警告：该简历关联了 ${linkedRooms.length} 个面试间，删除简历将同时删除以下面试间：\n`;
-            linkedRooms.forEach((room, index) => {
-                message += `${index + 1}. ${room.id}: ${room.name}\n`;
+    // 加载简历内容
+    loadContent();
+
+    // 自动保存 + 自动预览（防抖）
+    $('#resumeForm').on('input change', 'input, textarea', function() {
+        showSaveIndicator('saving');
+        clearTimeout(saveTimeout);
+        clearTimeout(previewTimeout);
+
+        saveTimeout = setTimeout(function() {
+            saveContent(true, function() {
+                // 保存成功后，如果开启了自动预览，则触发预览
+                if ($('#autoPreviewToggle').is(':checked')) {
+                    previewTimeout = setTimeout(function() {
+                        refreshPreview();
+                    }, 500);
+                }
             });
-        }
-        message += '\n此操作不可恢复。';
-        $('#deleteConfirmModal .modal-body p').html(message.replace(/\n/g, '<br>'));
-        deleteModal.show();
+        }, 2000);
     });
 
-    // 确认重命名
-    $('#confirmRenameBtn').on('click', function() {
-        const newName = $('#newResumeName').val().trim();
-        if (!newName) {
-            alert('请输入新名称');
-            return;
-        }
+    // 加载内容
+    function loadContent() {
+        $.ajax({
+            url: `/api/resumes/${resumeId}/content`,
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            success: function(response) {
+                if (response.code === 200 && response.data.content) {
+                    populateForm(response.data.content);
+                    // 页面加载后自动生成一次预览
+                    if ($('#autoPreviewToggle').is(':checked')) {
+                        setTimeout(refreshPreview, 500);
+                    }
+                }
+            }
+        });
+    }
 
-        renameModal.hide();
+    // 填充表单
+    function populateForm(content) {
+        $('#fullName').val(content.full_name || '');
+        $('#email').val(content.email || '');
+        $('#phone').val(content.phone || '');
+        $('#location').val(content.location || '');
+        $('#website').val(content.website || '');
+        $('#summary').val(content.summary || '');
+
+        (content.education || []).forEach(edu => addEducation(edu));
+        (content.experience || []).forEach(exp => addExperience(exp));
+        (content.projects || []).forEach(proj => addProject(proj));
+        (content.skills || []).forEach(skill => addSkill(skill));
+        (content.certifications || []).forEach(cert => addCertification(cert));
+    }
+
+    // 保存内容
+    window.saveContent = function(silent = false, callback = null) {
+        const content = collectFormData();
 
         $.ajax({
-            url: `/api/resumes/${resumeId}`,
+            url: `/api/resumes/${resumeId}/content`,
             method: 'PUT',
             contentType: 'application/json',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
-            data: JSON.stringify({
-                name: newName
-            }),
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            data: JSON.stringify(content),
             success: function(response) {
                 if (response.code === 200) {
-                    location.reload();
+                    showSaveIndicator('saved');
+                    if (currentStatus === 'published') {
+                        currentStatus = 'draft';
+                        updateStatusDisplay();
+                    }
+                    if (!silent) showToast('success', '保存成功');
+                    if (callback) callback();
                 } else {
-                    alert('重命名失败：' + (response.message || '未知错误'));
+                    showSaveIndicator('error');
+                    if (!silent) alert('保存失败：' + response.message);
                 }
             },
             error: function(xhr) {
-                const response = xhr.responseJSON;
-                alert('重命名失败：' + (response?.message || '网络错误'));
+                showSaveIndicator('error');
+                if (!silent) alert('保存失败：' + (xhr.responseJSON?.message || '网络错误'));
             }
         });
-    });
+    };
 
-    // 确认删除
+    // 刷新预览
+    window.refreshPreview = function() {
+        showPreviewLoading();
+
+        // 先保存
+        const content = collectFormData();
+        $.ajax({
+            url: `/api/resumes/${resumeId}/content`,
+            method: 'PUT',
+            contentType: 'application/json',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            data: JSON.stringify(content),
+            success: function() {
+                // 然后请求预览
+                $.ajax({
+                    url: `/api/resumes/${resumeId}/preview`,
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+                    success: function(response) {
+                        if (response.code === 200 && response.data.preview_url) {
+                            showPdf(response.data.preview_url);
+                        } else {
+                            showPreviewError(response.message || '预览生成失败');
+                        }
+                    },
+                    error: function(xhr) {
+                        showPreviewError(xhr.responseJSON?.message || '网络错误');
+                    }
+                });
+            },
+            error: function(xhr) {
+                showPreviewError('保存失败：' + (xhr.responseJSON?.message || '网络错误'));
+            }
+        });
+    };
+
+    // 显示 PDF
+    function showPdf(url) {
+        currentPreviewUrl = url;
+        $('#pdfPlaceholder').hide();
+        $('#pdfLoading').hide();
+        $('#pdfIframe').attr('src', url).show();
+        $('#previewStatus').removeClass('loading error').addClass('ready')
+            .html('<i class="fas fa-check"></i>');
+    }
+
+    // 显示加载中
+    function showPreviewLoading() {
+        $('#pdfPlaceholder').hide();
+        $('#pdfLoading').show();
+        $('#previewStatus').removeClass('ready error').addClass('loading')
+            .html('<i class="fas fa-spinner fa-spin"></i>');
+    }
+
+    // 显示错误
+    function showPreviewError(msg) {
+        $('#pdfLoading').hide();
+        if (!currentPreviewUrl) {
+            $('#pdfPlaceholder').show();
+        }
+        $('#previewStatus').removeClass('ready loading').addClass('error')
+            .html('<i class="fas fa-exclamation-circle"></i>');
+        showToast('error', msg);
+    }
+
+    // 收集表单数据
+    function collectFormData() {
+        return {
+            full_name: $('#fullName').val().trim(),
+            email: $('#email').val().trim(),
+            phone: $('#phone').val().trim(),
+            location: $('#location').val().trim(),
+            website: $('#website').val().trim(),
+            summary: $('#summary').val().trim(),
+            education: collectListData('education'),
+            experience: collectListData('experience'),
+            projects: collectListData('projects'),
+            skills: collectListData('skills'),
+            certifications: collectListData('certifications')
+        };
+    }
+
+    function collectListData(type) {
+        const items = [];
+        $(`#${type}List .list-item`).each(function() {
+            const item = {};
+            $(this).find('input, textarea').each(function() {
+                const name = $(this).attr('name');
+                if (name) item[name] = $(this).val().trim();
+            });
+
+            const highlights = [];
+            $(this).find('.highlight-item input').each(function() {
+                const val = $(this).val().trim();
+                if (val) highlights.push(val);
+            });
+            if (highlights.length > 0) item.highlights = highlights;
+
+            const skillItems = [];
+            $(this).find('.skill-item-input').each(function() {
+                const val = $(this).val().trim();
+                if (val) skillItems.push(val);
+            });
+            if (skillItems.length > 0) item.items = skillItems;
+
+            if (Object.keys(item).some(k => item[k])) items.push(item);
+        });
+        return items;
+    }
+
+    // 添加表单项函数
+    window.addEducation = function(data = {}) {
+        const html = `
+            <div class="list-item">
+                <button type="button" class="remove-btn" onclick="$(this).parent().remove()"><i class="fas fa-times"></i></button>
+                <div class="row g-2">
+                    <div class="col-6"><input type="text" class="form-control form-control-sm" name="school" placeholder="学校" value="${escapeHtml(data.school || '')}"></div>
+                    <div class="col-6"><input type="text" class="form-control form-control-sm" name="degree" placeholder="学历" value="${escapeHtml(data.degree || '')}"></div>
+                    <div class="col-6"><input type="text" class="form-control form-control-sm" name="major" placeholder="专业" value="${escapeHtml(data.major || '')}"></div>
+                    <div class="col-3"><input type="text" class="form-control form-control-sm" name="start" placeholder="开始" value="${escapeHtml(data.start || '')}"></div>
+                    <div class="col-3"><input type="text" class="form-control form-control-sm" name="end" placeholder="结束" value="${escapeHtml(data.end || '')}"></div>
+                </div>
+            </div>`;
+        $('#educationList').append(html);
+    };
+
+    window.addExperience = function(data = {}) {
+        const highlightsHtml = (data.highlights || []).map(h => `
+            <div class="highlight-item d-flex mb-1">
+                <input type="text" class="form-control form-control-sm" placeholder="工作亮点" value="${escapeHtml(h)}">
+                <button type="button" class="btn btn-sm btn-outline-danger ms-1" onclick="$(this).parent().remove()"><i class="fas fa-times"></i></button>
+            </div>`).join('');
+
+        const html = `
+            <div class="list-item">
+                <button type="button" class="remove-btn" onclick="$(this).parent().remove()"><i class="fas fa-times"></i></button>
+                <div class="row g-2">
+                    <div class="col-6"><input type="text" class="form-control form-control-sm" name="company" placeholder="公司" value="${escapeHtml(data.company || '')}"></div>
+                    <div class="col-6"><input type="text" class="form-control form-control-sm" name="title" placeholder="职位" value="${escapeHtml(data.title || '')}"></div>
+                    <div class="col-3"><input type="text" class="form-control form-control-sm" name="start" placeholder="开始" value="${escapeHtml(data.start || '')}"></div>
+                    <div class="col-3"><input type="text" class="form-control form-control-sm" name="end" placeholder="结束" value="${escapeHtml(data.end || '')}"></div>
+                    <div class="col-12">
+                        <div class="highlights-container">${highlightsHtml}</div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addHighlight(this)"><i class="fas fa-plus"></i> 亮点</button>
+                    </div>
+                </div>
+            </div>`;
+        $('#experienceList').append(html);
+    };
+
+    window.addProject = function(data = {}) {
+        const highlightsHtml = (data.highlights || []).map(h => `
+            <div class="highlight-item d-flex mb-1">
+                <input type="text" class="form-control form-control-sm" placeholder="项目亮点" value="${escapeHtml(h)}">
+                <button type="button" class="btn btn-sm btn-outline-danger ms-1" onclick="$(this).parent().remove()"><i class="fas fa-times"></i></button>
+            </div>`).join('');
+
+        const html = `
+            <div class="list-item">
+                <button type="button" class="remove-btn" onclick="$(this).parent().remove()"><i class="fas fa-times"></i></button>
+                <div class="row g-2">
+                    <div class="col-12"><input type="text" class="form-control form-control-sm" name="name" placeholder="项目名称" value="${escapeHtml(data.name || '')}"></div>
+                    <div class="col-12"><textarea class="form-control form-control-sm" name="description" rows="2" placeholder="项目描述">${escapeHtml(data.description || '')}</textarea></div>
+                    <div class="col-12">
+                        <div class="highlights-container">${highlightsHtml}</div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addHighlight(this)"><i class="fas fa-plus"></i> 亮点</button>
+                    </div>
+                </div>
+            </div>`;
+        $('#projectsList').append(html);
+    };
+
+    window.addSkill = function(data = {}) {
+        const itemsHtml = (data.items || []).map(item => `
+            <input type="text" class="form-control form-control-sm skill-item-input mb-1 me-1" placeholder="技能" value="${escapeHtml(item)}" style="display: inline-block; width: auto; min-width: 80px;">`).join('');
+
+        const html = `
+            <div class="list-item">
+                <button type="button" class="remove-btn" onclick="$(this).parent().remove()"><i class="fas fa-times"></i></button>
+                <div class="row g-2">
+                    <div class="col-4"><input type="text" class="form-control form-control-sm" name="category" placeholder="类别" value="${escapeHtml(data.category || '')}"></div>
+                    <div class="col-8">
+                        <div class="d-flex flex-wrap skill-items-container">${itemsHtml}</div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addSkillItem(this)"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>`;
+        $('#skillsList').append(html);
+    };
+
+    window.addCertification = function(data = {}) {
+        const html = `
+            <div class="list-item">
+                <button type="button" class="remove-btn" onclick="$(this).parent().remove()"><i class="fas fa-times"></i></button>
+                <div class="row g-2">
+                    <div class="col-6"><input type="text" class="form-control form-control-sm" name="name" placeholder="证书名称" value="${escapeHtml(data.name || '')}"></div>
+                    <div class="col-3"><input type="text" class="form-control form-control-sm" name="issuer" placeholder="机构" value="${escapeHtml(data.issuer || '')}"></div>
+                    <div class="col-3"><input type="text" class="form-control form-control-sm" name="date" placeholder="日期" value="${escapeHtml(data.date || '')}"></div>
+                </div>
+            </div>`;
+        $('#certificationsList').append(html);
+    };
+
+    window.addHighlight = function(btn) {
+        $(btn).siblings('.highlights-container').append(`
+            <div class="highlight-item d-flex mb-1">
+                <input type="text" class="form-control form-control-sm" placeholder="亮点">
+                <button type="button" class="btn btn-sm btn-outline-danger ms-1" onclick="$(this).parent().remove()"><i class="fas fa-times"></i></button>
+            </div>`);
+    };
+
+    window.addSkillItem = function(btn) {
+        $(btn).siblings('.skill-items-container').append(`
+            <input type="text" class="form-control form-control-sm skill-item-input mb-1 me-1" placeholder="技能" style="display: inline-block; width: auto; min-width: 80px;">`);
+    };
+
+    // 发布/取消发布
+    window.publishResume = function() {
+        saveContent(true);
+        $.ajax({
+            url: `/api/resumes/${resumeId}/publish`,
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            success: function(response) {
+                if (response.code === 200) {
+                    currentStatus = 'published';
+                    updateStatusDisplay();
+                    updatePublishAction();
+                    showToast('success', '简历已发布');
+                } else {
+                    alert('发布失败：' + response.message);
+                }
+            }
+        });
+    };
+
+    window.unpublishResume = function() {
+        $.ajax({
+            url: `/api/resumes/${resumeId}/unpublish`,
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            success: function(response) {
+                if (response.code === 200) {
+                    currentStatus = 'draft';
+                    updateStatusDisplay();
+                    updatePublishAction();
+                    showToast('success', '已取消发布');
+                }
+            }
+        });
+    };
+
+    window.downloadPdf = function() {
+        if (currentPreviewUrl) {
+            window.open(currentPreviewUrl, '_blank');
+        } else {
+            refreshPreview();
+            setTimeout(() => {
+                if (currentPreviewUrl) window.open(currentPreviewUrl, '_blank');
+            }, 3000);
+        }
+    };
+
+    window.forkResume = function() {
+        if (!confirm('确定要创建子版本吗？')) return;
+        $.ajax({
+            url: `/api/resumes/${resumeId}/fork`,
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            success: function(response) {
+                if (response.code === 200) {
+                    showToast('success', '子版本创建成功');
+                    window.location.href = `/resumes/${response.data.resume.id}`;
+                }
+            }
+        });
+    };
+
+    window.deleteResume = function() {
+        deleteModal.show();
+    };
+
     $('#confirmDeleteBtn').on('click', function() {
         deleteModal.hide();
-
         $.ajax({
             url: `/api/resumes/${resumeId}`,
             method: 'DELETE',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
             success: function(response) {
                 if (response.code === 200) {
                     window.location.href = '{{ url_for("room.resumes_list") }}';
-                } else {
-                    alert('删除失败：' + (response.message || '未知错误'));
                 }
-            },
-            error: function(xhr) {
-                const response = xhr.responseJSON;
-                alert('删除失败：' + (response?.message || '网络错误'));
             }
         });
+    });
+
+    function updateStatusDisplay() {
+        const badge = $('#statusBadge');
+        badge.removeClass('draft published');
+        badge.addClass(currentStatus === 'published' ? 'published' : 'draft');
+        badge.text(currentStatus === 'published' ? '已发布' : '编辑中');
+    }
+
+    function updatePublishAction() {
+        const item = $('#publishActionItem');
+        if (currentStatus === 'published') {
+            item.html(`<a class="dropdown-item" href="#" onclick="unpublishResume(); return false;">
+                <i class="fas fa-undo me-2" style="color: #f59e0b;"></i>取消发布</a>`);
+        } else {
+            item.html(`<a class="dropdown-item" href="#" onclick="publishResume(); return false;">
+                <i class="fas fa-upload me-2" style="color: #10b981;"></i>发布简历</a>`);
+        }
+    }
+
+    function showSaveIndicator(status) {
+        const indicator = $('#saveIndicator');
+        indicator.removeClass('saving saved error').addClass(status);
+        const icons = { saving: 'fa-spinner fa-spin', saved: 'fa-check', error: 'fa-exclamation-circle' };
+        const texts = { saving: '保存中...', saved: '已保存', error: '保存失败' };
+        indicator.html(`<i class="fas ${icons[status]} me-1"></i>${texts[status]}`);
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // 分栏拖动调整
+    const divider = document.getElementById('splitDivider');
+    const editorPane = document.getElementById('editorPane');
+    const previewPane = document.getElementById('previewPane');
+    let isDragging = false;
+
+    divider.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        const container = document.querySelector('.split-container');
+        const containerRect = container.getBoundingClientRect();
+        const percentage = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+        if (percentage > 30 && percentage < 70) {
+            editorPane.style.flex = `0 0 ${percentage}%`;
+            previewPane.style.flex = `0 0 ${100 - percentage - 1}%`;
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        isDragging = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
     });
 });
 </script>

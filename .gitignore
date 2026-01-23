@@ -87,3 +87,4 @@ env/
 ENV/
 venv.bak/
 env.bak/
+docs/
