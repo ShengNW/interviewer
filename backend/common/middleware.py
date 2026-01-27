@@ -11,6 +11,7 @@ from jose import jwt, JWTError
 from backend.common.response import ApiResponse
 from backend.common.exceptions import BusinessBaseException
 from backend.common.logger import get_logger
+from backend.utils.ucan import is_ucan_token, verify_ucan_invocation
 
 logger = get_logger(__name__)
 
@@ -178,9 +179,13 @@ def get_current_user() -> Optional[str]:
         return None
 
     try:
+        # UCAN 鉴权（仅 Authorization Header 传递）
+        if auth_header and auth_header.startswith('Bearer ') and is_ucan_token(token):
+            return verify_ucan_invocation(token)
+
         # 验证并解析JWT
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        wallet_address = payload.get('sub')
+        wallet_address = payload.get('sub') or payload.get('address')
         return wallet_address
     except JWTError as e:
         logger.warning(f"JWT验证失败: {str(e)}")
@@ -312,4 +317,3 @@ def require_resource_owner(resource_type: str = 'room'):
 
         return decorated_function
     return decorator
-

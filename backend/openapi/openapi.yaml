@@ -73,16 +73,46 @@ paths:
       tags:
       - Auth
       x-openapi-router-controller: backend.controllers.auth_controller
+  /api/v1/auth/refresh:
+    post:
+      operationId: auth_refresh
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/authVerifyResponse"
+          description: A successful response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/rpcStatus"
+          description: An unexpected error response.
+      summary: 刷新登录
+      tags:
+      - Auth
+      x-openapi-router-controller: backend.controllers.auth_controller
 components:
   schemas:
     authChallengeRequest:
-      properties:
-        header:
-          $ref: "#/components/schemas/commonMessageHeader"
-        body:
-          $ref: "#/components/schemas/authChallengeRequestRequestBody"
+      oneOf:
+      - type: object
+        properties:
+          address:
+            title: address
+            type: string
+        required:
+        - address
+      - type: object
+        properties:
+          header:
+            $ref: "#/components/schemas/commonMessageHeader"
+          body:
+            $ref: "#/components/schemas/authChallengeRequestRequestBody"
+        required:
+        - body
       title: authChallengeRequest
-      type: object
     authChallengeRequestRequestBody:
       properties:
         address:
@@ -126,13 +156,27 @@ components:
       title: authChallengeResponseBody
       type: object
     authVerifyRequest:
-      properties:
-        header:
-          $ref: "#/components/schemas/commonMessageHeader"
-        body:
-          $ref: "#/components/schemas/authVerifyRequestBody"
+      oneOf:
+      - type: object
+        properties:
+          address:
+            title: address
+            type: string
+          signature:
+            title: signature
+            type: string
+        required:
+        - address
+        - signature
+      - type: object
+        properties:
+          header:
+            $ref: "#/components/schemas/commonMessageHeader"
+          body:
+            $ref: "#/components/schemas/authVerifyRequestBody"
+        required:
+        - body
       title: authVerifyRequest
-      type: object
     authVerifyRequestBody:
       properties:
         address:
