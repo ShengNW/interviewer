@@ -1,166 +1,82 @@
 /**
- * Yeying 钱包集成
+ * Yeying 钱包集成（web3-bs）
  */
 
 // 全局变量
-let wallet = null;
+let provider = null;
 let currentAccount = null;
 let authToken = null;
 
+// SDK
+const YeYingWeb3 = window.YeYingWeb3 || null;
+
 // API 地址
 const API_BASE = window.location.origin + '/api/v1';
+const AUTH_BASE = `${API_BASE}/auth`;
+
+// 本地存储 key
+const TOKEN_KEY = 'auth_token';
+const ADDRESS_KEY = 'wallet_address';
+
+function ensureSdk() {
+    if (!YeYingWeb3) {
+        throw new Error('web3-bs SDK 未加载');
+    }
+}
 
 /**
- * 等待钱包注入
+ * 获取钱包 Provider（EIP-6963 优先 YeYing）
  */
-async function waitForWallet() {
-    return new Promise((resolve, reject) => {
-        if (typeof window.ethereum !== 'undefined') {
-            console.log('钱包已就绪');
-            resolve(window.ethereum);
-            return;
-        }
+async function getWalletProvider() {
+    ensureSdk();
+    if (provider) return provider;
 
-        console.log('等待钱包注入...');
-        let attempts = 0;
-        const maxAttempts = 50; // 5秒
-
-        const interval = setInterval(() => {
-            attempts++;
-            if (typeof window.ethereum !== 'undefined') {
-                clearInterval(interval);
-                console.log('检测到钱包对象');
-                resolve(window.ethereum);
-            } else if (attempts >= maxAttempts) {
-                clearInterval(interval);
-                reject(new Error('未检测到夜莺钱包'));
-            }
-        }, 100);
+    provider = await YeYingWeb3.getProvider({
+        timeoutMs: 3000,
+        preferYeYing: true
     });
+
+    return provider;
 }
 
 /**
  * 连接钱包获取账户
  */
 async function connectWallet() {
-    try {
-        const accounts = await wallet.request({
-            method: 'eth_requestAccounts'
-        });
+    const walletProvider = await getWalletProvider();
+    const accounts = await walletProvider.request({
+        method: 'eth_requestAccounts'
+    });
 
-        if (accounts.length > 0) {
-            currentAccount = accounts[0];
-            return currentAccount;
-        }
-        throw new Error('未获取到账户');
-    } catch (error) {
-        throw error;
+    if (Array.isArray(accounts) && accounts.length > 0) {
+        currentAccount = accounts[0];
+        return currentAccount;
     }
+    throw new Error('未获取到账户');
 }
 
 /**
- * 完整登录流程
+ * 完整登录流程（SIWE -> JWT）
  */
 async function performWalletLogin() {
-    try {
-        // 1. 连接钱包
-        console.log('正在连接钱包...');
-        const address = await connectWallet();
-        console.log('连接成功:', address);
+    ensureSdk();
 
-        // 2. 获取挑战
-        console.log('正在获取登录挑战...');
-        const challengeRes = await fetch(`${API_BASE}/auth/challenge`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                body: { address: address }
-            })
-        });
+    const walletProvider = await getWalletProvider();
 
-        if (!challengeRes.ok) {
-            throw new Error(`获取挑战失败: ${challengeRes.status}`);
-        }
+    const loginResult = await YeYingWeb3.loginWithChallenge({
+        provider: walletProvider,
+        baseUrl: AUTH_BASE,
+        tokenStorageKey: TOKEN_KEY,
+        storeToken: true,
+        credentials: 'include'
+    });
 
-        const challengeData = await challengeRes.json();
-        if (!challengeData.body || !challengeData.body.result) {
-            throw new Error('挑战数据格式错误');
-        }
+    currentAccount = loginResult.address;
+    authToken = loginResult.token;
 
-        const challenge = challengeData.body.result;
-        console.log('获取挑战成功');
+    localStorage.setItem(ADDRESS_KEY, loginResult.address);
 
-        // 3. 签名挑战
-        console.log('请在钱包中签名...');
-        const signature = await wallet.request({
-            method: 'personal_sign',
-            params: [challenge, address]
-        });
-
-        // 验证签名
-        if (!signature) {
-            throw new Error('签名失败：未获取到有效签名');
-        }
-
-        // 检查是否返回了错误对象
-        if (typeof signature === 'object') {
-            if (signature.error) {
-                if (signature.error === 'Wallet locked' || (typeof signature.error === 'string' && signature.error.includes('locked'))) {
-                    throw new Error('钱包已锁定，请先解锁钱包后再试');
-                }
-                throw new Error(`签名失败：${signature.error}`);
-            }
-            throw new Error('签名返回了无效的对象');
-        }
-
-        // 验证签名格式（应该是 0x 开头的十六进制字符串）
-        if (typeof signature !== 'string') {
-            throw new Error('签名格式无效：不是字符串');
-        }
-
-        if (!signature.startsWith('0x') || signature.length < 130) {
-            throw new Error('签名格式无效，请重试');
-        }
-
-        console.log('签名成功');
-
-        // 4. 验证签名
-        console.log('正在验证签名...');
-        const verifyRes = await fetch(`${API_BASE}/auth/verify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                body: {
-                    address: address,
-                    signature: signature
-                }
-            })
-        });
-
-        if (!verifyRes.ok) {
-            throw new Error(`验证失败: ${verifyRes.status}`);
-        }
-
-        const verifyData = await verifyRes.json();
-        if (!verifyData.body || !verifyData.body.token) {
-            throw new Error('验证响应格式错误');
-        }
-
-        authToken = verifyData.body.token;
-
-        // 5. 保存 token
-        localStorage.setItem('auth_token', authToken);
-        localStorage.setItem('wallet_address', address);
-
-        console.log('登录成功！');
-        console.log('Token:', authToken);
-
-        return { address, token: authToken };
-
-    } catch (error) {
-        console.error('登录失败:', error);
-        throw error;
-    }
+    return loginResult;
 }
 
 /**
@@ -181,7 +97,6 @@ function updateWalletUI(isConnected) {
 
     // 未登录页面：只更新连接按钮状态
     if (connectBtn && isConnected && currentAccount) {
-        // 连接成功后会自动刷新页面，所以这里不需要特别处理
         return;
     }
 
@@ -195,7 +110,6 @@ function updateWalletUI(isConnected) {
  * 显示 Toast 提示
  */
 function showToast(type, message) {
-    // 使用现有的 toast 工具，或者简单的 alert
     if (window.YeyingInterviewer && window.YeyingInterviewer.showToast) {
         window.YeyingInterviewer.showToast(type, message);
     } else {
@@ -204,19 +118,48 @@ function showToast(type, message) {
 }
 
 /**
+ * 退出登录
+ */
+async function performLogout() {
+    try {
+        if (YeYingWeb3 && YeYingWeb3.logout) {
+            await YeYingWeb3.logout({
+                baseUrl: AUTH_BASE,
+                tokenStorageKey: TOKEN_KEY,
+                storeToken: true,
+                credentials: 'include'
+            });
+        } else {
+            await fetch(`${AUTH_BASE}/logout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            localStorage.removeItem(TOKEN_KEY);
+        }
+    } catch (error) {
+        console.error('调用退出接口失败:', error);
+    }
+
+    currentAccount = null;
+    authToken = null;
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(ADDRESS_KEY);
+}
+
+/**
  * 页面加载时初始化
  */
 $(document).ready(async function() {
-    console.log('Yeying 钱包模块已加载');
+    console.log('Yeying 钱包模块已加载 (web3-bs)');
 
     // 等待并检测钱包
     try {
-        wallet = await waitForWallet();
+        provider = await getWalletProvider();
         console.log('钱包检测完成');
 
-        if (wallet.isYeYingWallet) {
+        if (provider && provider.isYeYingWallet) {
             console.log('检测到 YeYing Wallet');
-        } else if (wallet.isMetaMask) {
+        } else if (provider && provider.isMetaMask) {
             console.log('检测到 MetaMask');
         }
     } catch (error) {
@@ -224,8 +167,8 @@ $(document).ready(async function() {
     }
 
     // 检查是否已登录
-    const savedToken = localStorage.getItem('auth_token');
-    const savedAddress = localStorage.getItem('wallet_address');
+    const savedToken = localStorage.getItem(TOKEN_KEY);
+    const savedAddress = localStorage.getItem(ADDRESS_KEY);
     if (savedToken && savedAddress) {
         authToken = savedToken;
         currentAccount = savedAddress;
@@ -238,19 +181,13 @@ $(document).ready(async function() {
         const $btn = $(this);
         const originalHtml = $btn.html();
 
-        // 检查钱包是否就绪
-        if (!wallet) {
-            showToast('error', '未检测到夜莺钱包，请确保已安装并启用');
-            return;
-        }
-
         try {
             // 显示加载状态
             $btn.prop('disabled', true);
             $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>连接中...');
 
             // 执行登录
-            const result = await performWalletLogin();
+            await performWalletLogin();
 
             // 更新 UI
             updateWalletUI(true);
@@ -270,9 +207,7 @@ $(document).ready(async function() {
             let errorMsg = '连接失败，请重试';
             if (error.code === 4001) {
                 errorMsg = '您拒绝了连接请求';
-            } else if (error.message && error.message.includes('Session expired')) {
-                errorMsg = '钱包会话已过期，请重新解锁钱包后再试';
-            } else if (error.message && error.message.includes('No wallet found')) {
+            } else if (error.message && error.message.includes('No wallet')) {
                 errorMsg = '未找到钱包，请确保夜莺钱包已解锁';
             } else if (error.message && error.message.includes('timeout')) {
                 errorMsg = '连接超时，请检查钱包是否正常运行';
@@ -286,69 +221,32 @@ $(document).ready(async function() {
 
     // 绑定退出按钮
     $('#logoutBtn').on('click', async function() {
-        try {
-            // 调用后端退出接口清除Cookie
-            await fetch(`${API_BASE}/auth/logout`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-        } catch (error) {
-            console.error('调用退出接口失败:', error);
-        }
-
-        // 清除本地登录状态
-        currentAccount = null;
-        authToken = null;
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('wallet_address');
-
+        await performLogout();
         console.log('已退出登录');
-
-        // 刷新页面回到landing页
         window.location.href = '/';
     });
 
     // 监听钱包事件
-    if (wallet) {
-        wallet.on('accountsChanged', (accounts) => {
+    if (provider && provider.on) {
+        provider.on('accountsChanged', (accounts) => {
             console.log('账户已切换:', accounts);
-            if (accounts.length === 0) {
-                // 断开连接 - 清除所有状态并刷新
-                currentAccount = null;
-                authToken = null;
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('wallet_address');
+            if (!accounts || accounts.length === 0) {
+                performLogout().finally(() => {
+                    window.location.href = '/';
+                });
+                return;
+            }
 
-                // 调用后端清除Cookie
-                fetch(`${API_BASE}/auth/logout`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                }).catch(err => console.error('清除Cookie失败:', err));
-
-                // 刷新页面
-                window.location.href = '/';
-            } else if (accounts[0] !== currentAccount) {
-                // 切换账户 - 需要重新登录
+            if (accounts[0] !== currentAccount) {
                 console.log('检测到账户切换，需要重新登录');
-                currentAccount = null;
-                authToken = null;
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('wallet_address');
-
-                // 调用后端清除Cookie
-                fetch(`${API_BASE}/auth/logout`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                }).catch(err => console.error('清除Cookie失败:', err));
-
-                // 刷新页面
-                window.location.href = '/';
+                performLogout().finally(() => {
+                    window.location.href = '/';
+                });
             }
         });
 
-        wallet.on('chainChanged', (chainId) => {
+        provider.on('chainChanged', (chainId) => {
             console.log('链已切换:', chainId);
-            // 建议刷新页面
             window.location.reload();
         });
     }
@@ -356,7 +254,7 @@ $(document).ready(async function() {
 
 // 暴露到全局（用于调试）
 window.walletDebug = {
-    wallet,
+    provider,
     currentAccount,
     authToken,
     getToken: () => authToken,
